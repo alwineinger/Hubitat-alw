@@ -226,6 +226,7 @@ private List<Map> collectIndoorSensors(Map data) {
         grouped[groupKey] = group
       }
       mergeSensorIntoGroup(group, sensorCopy)
+      applyDeviceMetrics(group, device)
     }
   }
 
@@ -384,6 +385,18 @@ private void mergeSensorIntoGroup(Map grouped, Map sensor) {
 
   if (readings) {
     grouped.readings.addAll(readings)
+  }
+}
+
+private void applyDeviceMetrics(Map grouped, Map device) {
+  if (device?.status_code != null) {
+    grouped.status_code = device.status_code
+  }
+  if (device?.signal_strength != null) {
+    grouped.signal_strength = device.signal_strength
+  }
+  if (device?.containsKey("battery_level") && grouped.battery_level == null) {
+    grouped.battery_level = device.battery_level
   }
 }
 
