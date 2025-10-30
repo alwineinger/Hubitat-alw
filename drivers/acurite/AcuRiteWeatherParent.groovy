@@ -18,7 +18,7 @@ import java.util.LinkedHashMap
 ]
 
 metadata {
-  definition(name: "AcuRite Weather Station Parent", namespace: "alwineinger", author: "ChatGPT") {
+  definition(name: "AcuRite Sensor Parent", namespace: "alwineinger", author: "ChatGPT") {
     capability "Initialize"
     capability "Refresh"
     capability "Sensor"
