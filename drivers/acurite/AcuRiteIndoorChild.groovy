@@ -11,6 +11,9 @@ metadata {
     capability "Battery"
 
     attribute "sensor_name", "string"
+    attribute "battery_level", "string"
+    attribute "status_code", "string"
+    attribute "signal_strength", "number"
   }
 }
 
@@ -45,6 +48,7 @@ def parse(Map sensor) {
   }
 
   handleBattery(sensor)
+  handleDeviceMetrics(sensor)
 }
 
 private void handleReading(Map reading) {
@@ -72,10 +76,24 @@ private void handleBattery(Map sensor) {
   if (sensor?.battery_level != null) {
     Integer batt = (sensor.battery_level == "Normal") ? 100 : 0
     updateAttribute("battery", batt)
+    updateAttribute("battery_level", sensor.battery_level)
   } else if (sensor?.battery != null) {
-    updateAttribute("battery", sensor.battery as Integer)
+    Integer batt = sensor.battery as Integer
+    updateAttribute("battery", batt)
+    updateAttribute("battery_level", batt)
   } else if (sensor?.battery_percentage != null) {
-    updateAttribute("battery", sensor.battery_percentage as Integer)
+    Integer batt = sensor.battery_percentage as Integer
+    updateAttribute("battery", batt)
+    updateAttribute("battery_level", batt)
+  }
+}
+
+private void handleDeviceMetrics(Map sensor) {
+  if (sensor?.containsKey("status_code")) {
+    updateAttribute("status_code", sensor.status_code?.toString())
+  }
+  if (sensor?.containsKey("signal_strength") && sensor.signal_strength != null) {
+    updateAttribute("signal_strength", toBigDecimal(sensor.signal_strength))
   }
 }
 
