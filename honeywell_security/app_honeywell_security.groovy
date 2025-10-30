@@ -116,15 +116,26 @@ def updated() {
 }
 
 def lanResponseHandler(fromChildDev) {
-	try {
-    	def parsedEvent = parseLanMessage(fromChildDev).json
-		def description = parsedEvent?.description
-		def map = parseLanMessage(fromChildDev)
-  		if (map.headers.'stnp-plugin' != settings.pluginType) {
-      		return
-  		}
-  		processEvent(parsedEvent)
-	} catch(MissingMethodException) {
+  try {
+    if (!fromChildDev || (!fromChildDev.contains('stnp-plugin:') && !(settings?.pluginType && fromChildDev.contains(settings.pluginType)))) {
+      return
+    }
+
+    def map = parseLanMessage(fromChildDev)
+    def headers = map?.headers
+    def parsedEvent = map?.json
+    def description = parsedEvent?.description
+
+    if (!headers || !parsedEvent) {
+      return
+    }
+
+    if (headers.'stnp-plugin' && headers.'stnp-plugin' != settings.pluginType) {
+      return
+    }
+
+    processEvent(parsedEvent)
+  } catch(MissingMethodException) {
 		// these are events with description: null and data: null, so we'll just pass.
 		pass
 	}
