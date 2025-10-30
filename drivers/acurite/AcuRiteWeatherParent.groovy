@@ -278,6 +278,9 @@ private String childDeviceNetworkId(Map sensor) {
   if (!sensorId && sensor?.primarySensorId) {
     sensorId = sensor.primarySensorId.toString()
   }
+  if (!sensorId && sensor?.parentDeviceName) {
+    sensorId = sanitizeIdentifier(sensor.parentDeviceName)
+  }
   if (!sensorId && sensor?.device_name) {
     sensorId = sanitizeIdentifier(sensor.device_name)
   }
@@ -298,7 +301,7 @@ private String childDeviceNetworkId(Map sensor) {
 }
 
 private String childLabel(Map sensor) {
-  String sensorName = sensor?.device_name ?: sensor?.name ?: sensor?.sensor_name ?: sensor?.id
+  String sensorName = sensor?.parentDeviceName ?: sensor?.device_name ?: sensor?.name ?: sensor?.sensor_name ?: sensor?.id
   if (!sensorName && sensor?.combinedId) {
     sensorName = sensor.combinedId
   }
@@ -327,8 +330,8 @@ private Map initializeGroupedSensor(String groupKey, Map sensor) {
     combinedId      : groupKey,
     parentDeviceId  : sensor?.parentDeviceId,
     parentDeviceName: sensor?.parentDeviceName,
-    device_name     : sensor?.device_name ?: sensor?.deviceName ?: sensor?.name,
-    name            : sensor?.device_name ?: sensor?.name ?: sensor?.sensor_name,
+    device_name     : sensor?.parentDeviceName ?: sensor?.device_name ?: sensor?.deviceName ?: sensor?.name,
+    name            : sensor?.parentDeviceName ?: sensor?.device_name ?: sensor?.name ?: sensor?.sensor_name,
     primarySensorId : sensor?.id ?: sensor?.sensor_id,
     sensorIds       : [],
     readings        : []
@@ -339,6 +342,9 @@ private Map initializeGroupedSensor(String groupKey, Map sensor) {
 }
 
 private void mergeSensorIntoGroup(Map grouped, Map sensor) {
+  if (!grouped.parentDeviceName && sensor?.parentDeviceName) {
+    grouped.parentDeviceName = sensor.parentDeviceName
+  }
   if (!grouped.device_name && sensor?.device_name) {
     grouped.device_name = sensor.device_name
   }
@@ -385,6 +391,10 @@ private Map finalizeGroupedSensor(Map grouped) {
   Map result = cloneMap(grouped)
   List<String> sensorIds = (grouped.sensorIds ?: []).collect { it?.toString() }.findAll { it }
   result.sensorIds = sensorIds?.unique() ?: []
+  result.parentDeviceName = grouped.parentDeviceName
+  if (!result.device_name && result.parentDeviceName) {
+    result.device_name = result.parentDeviceName
+  }
   result.device_name = result.device_name ?: result.name
   result.name = result.device_name ?: result.name
   result.id = result.primarySensorId ?: result.combinedId
@@ -412,6 +422,8 @@ private Map cloneMap(Map input) {
 
 private String determinePhysicalSensorKey(Map sensor) {
   List candidates = [
+    sensor?.parentDeviceId,
+    sensor?.parentDeviceName ? sanitizeIdentifier(sensor.parentDeviceName) : null,
     sensor?.device_sensor_id,
     sensor?.sensor_device_id,
     sensor?.sensor_deviceid,
