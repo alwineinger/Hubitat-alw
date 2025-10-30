@@ -6,6 +6,7 @@
  */
 
 import groovy.transform.Field
+import java.util.LinkedHashMap
 
 @Field static final Map<String,Integer> POLL_MINUTES = [
   "5 Minutes": 5,
@@ -205,23 +206,30 @@ private void handleChildDevices(Map data) {
 }
 
 private List<Map> collectIndoorSensors(Map data) {
+  Map<String, Map> grouped = [:]
   List<Map> devices = data?.devices instanceof List ? data.devices : []
-  devices.collectMany { Map device ->
-    List<Map> deviceSensors = []
-    if (device?.sensors instanceof List) {
-      deviceSensors.addAll(device.sensors.findAll { Map s -> isIndoorSensor(s) })
-    }
-    if (device?.wired_sensors instanceof List) {
-      device?.wired_sensors?.findAll { Map s -> isIndoorSensor(s) }?.each { Map s -> deviceSensors << s }
-    }
 
-    deviceSensors.collect { Map sensor ->
-      Map sensorCopy = [:]
-      sensorCopy.putAll(sensor ?: [:])
+  devices.each { Map device ->
+    gatherDeviceSensors(device).each { Map sensor ->
+      if (!isIndoorSensor(sensor)) {
+        return
+      }
+
+      Map sensorCopy = cloneMap(sensor)
       sensorCopy.parentDeviceId = device?.id
-      sensorCopy
+      sensorCopy.parentDeviceName = device?.name
+
+      String groupKey = determinePhysicalSensorKey(sensorCopy)
+      Map group = grouped[groupKey]
+      if (!group) {
+        group = initializeGroupedSensor(groupKey, sensorCopy)
+        grouped[groupKey] = group
+      }
+      mergeSensorIntoGroup(group, sensorCopy)
     }
   }
+
+  grouped.values().collect { finalizeGroupedSensor(it) }
 }
 
 private boolean isIndoorSensor(Map sensor) {
@@ -266,23 +274,183 @@ private void updateChildLabelIfNeeded(child, Map sensor) {
 }
 
 private String childDeviceNetworkId(Map sensor) {
-  String sensorId = sensor?.id ? sensor.id.toString() : sensor?.sensor_id?.toString()
+  String sensorId = sensor?.combinedId ?: sensor?.groupId
+  if (!sensorId && sensor?.primarySensorId) {
+    sensorId = sensor.primarySensorId.toString()
+  }
+  if (!sensorId && sensor?.device_name) {
+    sensorId = sanitizeIdentifier(sensor.device_name)
+  }
   if (!sensorId && sensor?.name) {
-    sensorId = sensor.name.toString().replaceAll(/\s+/, "-")
+    sensorId = sanitizeIdentifier(sensor.name)
   }
   if (!sensorId && sensor?.sensor_name) {
-    sensorId = sensor.sensor_name.toString().replaceAll(/\s+/, "-")
+    sensorId = sanitizeIdentifier(sensor.sensor_name)
+  }
+  if (!sensorId && sensor?.id) {
+    sensorId = sensor.id.toString()
+  }
+  if (!sensorId && sensor?.sensor_id) {
+    sensorId = sensor.sensor_id.toString()
   }
   String parentId = sensor?.parentDeviceId ? sensor.parentDeviceId.toString() : ""
   return "acurite-${device.deviceNetworkId}-${parentId}-${sensorId ?: sensor.hashCode()}"
 }
 
 private String childLabel(Map sensor) {
-  String sensorName = sensor?.name ?: sensor?.sensor_name ?: sensor?.id
-  if (sensor?.id && sensorName && sensorName != sensor.id.toString()) {
-    sensorName = "${sensorName} (${sensor.id})"
+  String sensorName = sensor?.device_name ?: sensor?.name ?: sensor?.sensor_name ?: sensor?.id
+  if (!sensorName && sensor?.combinedId) {
+    sensorName = sensor.combinedId
   }
-  return "AcuRite Indoor Sensor ${sensorName}".toString()
+  return sensorName ? sensorName.toString() : "AcuRite Indoor Sensor"
+}
+
+private List<Map> gatherDeviceSensors(Map device) {
+  List<Map> sensors = []
+  if (device?.sensors instanceof List) {
+    sensors.addAll(device.sensors as List<Map>)
+  }
+  if (device?.wired_sensors instanceof List) {
+    sensors.addAll(device.wired_sensors as List<Map>)
+  }
+  if (device?.wireless_sensors instanceof List) {
+    sensors.addAll(device.wireless_sensors as List<Map>)
+  }
+  if (device?.wireless?.sensors instanceof List) {
+    sensors.addAll(device.wireless.sensors as List<Map>)
+  }
+  sensors
+}
+
+private Map initializeGroupedSensor(String groupKey, Map sensor) {
+  Map grouped = [
+    combinedId      : groupKey,
+    parentDeviceId  : sensor?.parentDeviceId,
+    parentDeviceName: sensor?.parentDeviceName,
+    device_name     : sensor?.device_name ?: sensor?.deviceName ?: sensor?.name,
+    name            : sensor?.device_name ?: sensor?.name ?: sensor?.sensor_name,
+    primarySensorId : sensor?.id ?: sensor?.sensor_id,
+    sensorIds       : [],
+    readings        : []
+  ]
+
+  mergeBatteryFields(grouped, sensor)
+  grouped
+}
+
+private void mergeSensorIntoGroup(Map grouped, Map sensor) {
+  if (!grouped.device_name && sensor?.device_name) {
+    grouped.device_name = sensor.device_name
+  }
+  if (!grouped.name && sensor?.name) {
+    grouped.name = sensor.name
+  }
+  if (!grouped.primarySensorId && (sensor?.id || sensor?.sensor_id)) {
+    grouped.primarySensorId = sensor?.id ?: sensor?.sensor_id
+  }
+
+  mergeBatteryFields(grouped, sensor)
+
+  if (sensor?.id) {
+    grouped.sensorIds << sensor.id
+  }
+  if (sensor?.sensor_id) {
+    grouped.sensorIds << sensor.sensor_id
+  }
+
+  List<Map> readings = []
+  if (sensor?.sensors instanceof List) {
+    readings.addAll((sensor.sensors as List<Map>).collect { cloneMap(it) })
+  }
+  if (sensor?.readings instanceof List) {
+    readings.addAll((sensor.readings as List<Map>).collect { cloneMap(it) })
+  }
+  if (sensor?.wireless?.sensors instanceof List) {
+    readings.addAll((sensor.wireless.sensors as List<Map>).collect { cloneMap(it) })
+  }
+  if (sensor?.sensor_name && sensor.containsKey("last_reading_value")) {
+    readings << cloneMap(sensor)
+  }
+
+  if (!readings && sensor) {
+    readings << cloneMap(sensor)
+  }
+
+  if (readings) {
+    grouped.readings.addAll(readings)
+  }
+}
+
+private Map finalizeGroupedSensor(Map grouped) {
+  Map result = cloneMap(grouped)
+  List<String> sensorIds = (grouped.sensorIds ?: []).collect { it?.toString() }.findAll { it }
+  result.sensorIds = sensorIds?.unique() ?: []
+  result.device_name = result.device_name ?: result.name
+  result.name = result.device_name ?: result.name
+  result.id = result.primarySensorId ?: result.combinedId
+  List<Map> readings = grouped.readings instanceof List ? grouped.readings : []
+  result.sensors = readings.collect { cloneMap(it) }
+  result.readings = readings.collect { cloneMap(it) }
+  return result
+}
+
+private void mergeBatteryFields(Map target, Map source) {
+  if (source?.containsKey("battery_level") && source.battery_level != null) {
+    target.battery_level = source.battery_level
+  }
+  if (source?.containsKey("battery") && source.battery != null) {
+    target.battery = source.battery
+  }
+  if (source?.containsKey("battery_percentage") && source.battery_percentage != null) {
+    target.battery_percentage = source.battery_percentage
+  }
+}
+
+private Map cloneMap(Map input) {
+  input ? new LinkedHashMap(input) : [:]
+}
+
+private String determinePhysicalSensorKey(Map sensor) {
+  List candidates = [
+    sensor?.device_sensor_id,
+    sensor?.sensor_device_id,
+    sensor?.sensor_deviceid,
+    sensor?.device_id,
+    sensor?.parent_sensor_id,
+    sensor?.bridge_device_id,
+    sensor?.sensor_serial,
+    sensor?.sensor_mac,
+    sensor?.wireless_sensor_id
+  ]
+
+  for (Object candidate : candidates) {
+    if (candidate) {
+      return candidate.toString()
+    }
+  }
+
+  if (sensor?.device_name) {
+    return sanitizeIdentifier(sensor.device_name)
+  }
+  if (sensor?.name) {
+    return sanitizeIdentifier(sensor.name)
+  }
+  if (sensor?.sensor_name) {
+    return sanitizeIdentifier(sensor.sensor_name)
+  }
+  if (sensor?.id) {
+    return sensor.id.toString()
+  }
+  if (sensor?.sensor_id) {
+    return sensor.sensor_id.toString()
+  }
+
+  return sensor.hashCode().toString()
+}
+
+private String sanitizeIdentifier(Object value) {
+  String sanitized = value?.toString()?.trim()?.toLowerCase()?.replaceAll(/[^a-z0-9]+/, "-")
+  sanitized ? sanitized.replaceAll(/^-+|-+$/, "") : null
 }
 
 private void sendIfChanged(String name, value, String unit = null) {
