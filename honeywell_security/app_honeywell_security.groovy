@@ -134,7 +134,13 @@ def lanResponseHandler(fromChildDev) {
       return
     }
 
-    def map = parseLanMessage(description)
+    def map
+    try {
+      map = parseLanMessage(description)
+    } catch (ArrayIndexOutOfBoundsException e) {
+      ifDebug("Unable to parse LAN description: ${description}")
+      return
+    }
     def headers = map?.headers
     def parsedEvent = map?.json
 
@@ -155,9 +161,9 @@ def lanResponseHandler(fromChildDev) {
 
     ifDebug("Forwarding event to processEvent: ${parsedEvent}")
     processEvent(parsedEvent)
-  } catch(MissingMethodException) {
+  } catch(MissingMethodException e) {
                 // these are events with description: null and data: null, so we'll just pass.
-                pass
+                ifDebug("Ignoring MissingMethodException in lanResponseHandler: ${e?.message}")
         }
 }
 
