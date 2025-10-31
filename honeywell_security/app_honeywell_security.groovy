@@ -134,7 +134,13 @@ def lanResponseHandler(fromChildDev) {
       return
     }
 
-    def map = parseLanMessage(description)
+    def map
+    try {
+      map = parseLanMessage(description)
+    } catch (ArrayIndexOutOfBoundsException e) {
+      ifDebug("Unable to parse LAN description: ${description}")
+      return
+    }
     def headers = map?.headers
     def parsedEvent = map?.json
 
