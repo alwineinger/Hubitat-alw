@@ -12,6 +12,21 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  */
+import groovy.transform.Field
+
+@Field static final Map MOTION_EVENTS = [
+  'closed': 'inactive',
+  'open': 'active',
+  'alarm': 'alarm'
+]
+
+@Field static final Map MOTION_DESCRIPTIONS = [
+  'closed': 'Motion Has Stopped',
+  'open': 'Detected Motion',
+  'alarm': 'Alarm Triggered'
+]
+
+@Field static final String MOTION_DEFAULT_DESCRIPTION = 'Motion state updated'
 metadata {
   definition (name: "Honeywell Zone Motion", namespace: "brianwilson-hubitat", author: "bubba@bubba.org") {
     capability "Motion Sensor"
@@ -27,19 +42,12 @@ def installed(){
 
 def zone(String state) {
   // need to convert open to active and closed to inactive
-  def eventMap = [
-    'closed':"inactive",
-    'open':"active",
-    'alarm':"alarm"
-  ]
-  def newState = eventMap."${state}"
+  def newState = MOTION_EVENTS.get(state, state ?: 'unknown')
+  def currentState = device?.currentValue('motion')
+  if (newState == currentState && state != 'alarm') {
+    return
+  }
 
-  def descMap = [
-    'closed':"Motion Has Stopped",
-    'open':"Detected Motion",
-    'alarm':"Alarm Triggered"
-  ]
-  def desc = descMap."${state}"
-
-  sendEvent (name: "motion", value: "${newState}", descriptionText: "${desc}")
+  def desc = MOTION_DESCRIPTIONS.get(state, MOTION_DEFAULT_DESCRIPTION)
+  sendEvent(name: 'motion', value: newState, descriptionText: desc)
 }
