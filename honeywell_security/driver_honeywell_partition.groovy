@@ -96,8 +96,19 @@ metadata {
 }
 
 def partition(String state, String alpha) {
-  sendEvent (name: "dscpartition", value: "${state}", descriptionText: "${alpha}")
-  sendEvent (name: "panelStatus", value: "${alpha}", displayed: false)
+  def currentPartition = device.currentValue('dscpartition')
+  def currentPanelStatus = device.currentValue('panelStatus')
+
+  def partitionChanged = currentPartition != state
+  def panelStatusChanged = currentPanelStatus != alpha
+
+  if (partitionChanged) {
+    sendEvent (name: "dscpartition", value: "${state}", descriptionText: "${alpha}")
+  }
+
+  if (panelStatusChanged) {
+    sendEvent (name: "panelStatus", value: "${alpha}", displayed: false)
+  }
 }
 
 def armAway() {
