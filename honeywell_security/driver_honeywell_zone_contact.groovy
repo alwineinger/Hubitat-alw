@@ -12,6 +12,15 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  */
+import groovy.transform.Field
+
+@Field static final Map CONTACT_DESCRIPTIONS = [
+  'closed': 'Was Closed',
+  'open': 'Was Opened',
+  'alarm': 'Alarm Triggered'
+]
+
+@Field static final String CONTACT_DEFAULT_DESCRIPTION = 'Contact state updated'
 metadata {
   definition (name: "Honeywell Zone Contact", namespace: "brianwilson-hubitat", author: "bubba@bubba.org") {
     capability "Contact Sensor"
@@ -26,12 +35,11 @@ def installed(){
 }
 
 def zone(String state) {
-  def descMap = [
-    'closed':"Was Closed",
-    'open':"Was Opened",
-    'alarm':"Alarm Triggered"
-  ]
-  def desc = descMap."${state}"
+  def currentState = device?.currentValue('contact')
+  if (currentState == state) {
+    return
+  }
 
-  sendEvent (name: "contact", value: "${state}", descriptionText: "${desc}")
+  def desc = CONTACT_DESCRIPTIONS.get(state, CONTACT_DEFAULT_DESCRIPTION)
+  sendEvent(name: 'contact', value: state, descriptionText: desc)
 }
