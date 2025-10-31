@@ -78,235 +78,280 @@ preferences {
 
     }
 
-def installed()
-{
-def realgdstate = sensor.currentContact
-def virtualgdstate = virtualgd.currentContact
+def installed() {
+    logInfoAlways "Installed"
+    initialize()
+}
 
-	subscribe(sensor, "contact", contactHandler)
+def updated() {
+    logInfoAlways "Updated"
+    unsubscribe()
+    unschedule()
+    initialize()
+}
+
+def initialize() {
+    def realgdstate = sensor.currentContact
+    def virtualgdstate = virtualgd.currentContact
+
+    subscribe(sensor, "contact", contactHandler)
     subscribe(virtualgdbutton, "contact", virtualgdcontactHandler)
-    
-    // sync them up if need be set virtual same as actual
-    if (realgdstate != virtualgdstate)
-     {
-        if (realgdstate == "open")
-           {
-             virtualgd.open()
-            }
-         else virtualgd.close()
-      }
-    
-   if (descLog) log.info "Descriptive Text logging is on."
-   else log.info "Description Text logging is off."
-    
-   if (debug)
-    {
-        log.info "Debug logging is on. Turning off debug logging in 1/2 hour."
-        runIn(1800,logsOff)
-    }
-   else log.info "Debug logging is off."
-      
-    
- }
 
-def updated()
-{
-def realgdstate = sensor.currentContact
-def virtualgdstate = virtualgd.currentContact
+    cancelBlinkSequence(true)
+    state.remove("pendingOperations")
 
-	unsubscribe()
-	subscribe(sensor, "contact", contactHandler)
-    subscribe(virtualgdbutton, "contact", virtualgdcontactHandler)
-    
-    // sync them up if need be set virtual same as actual
-    if (realgdstate != virtualgdstate)
-     {
-        if (realgdstate == "open")
-           {
-             log.info "opening virtual door"
-             mysend("virtualgd.displayName Opened!")     
-             virtualgd.open()
-            }
-         else {
-              virtualgd.close()
-              log.info "closing virtual door"
-              mysend("$virtualgd.displayName Closed!")   
-     		 }
-      }
-  // for debugging and testing uncomment  temperatureHandlerTest()
-   if (descLog) log.info "Descriptive Text logging is on."
-   else log.info "Description Text logging is off."
-    
-   if (debug)
-    {
-        log.info "Debug logging is on. Turning off debug logging in 1/2 hour."
-        runIn(1800,logsOff)
+    if (realgdstate != virtualgdstate) {
+        if (realgdstate == "open") {
+            logInfo "Synchronizing virtual door to open."
+            virtualgd.open()
+        } else {
+            logInfo "Synchronizing virtual door to closed."
+            virtualgd.close()
+        }
     }
-   else log.info "Debug logging is off."
-           
+
+    logInfoAlways "Descriptive Text logging is ${descLog ? 'on' : 'off'}."
+
+    if (debug) {
+        logInfoAlways "Debug logging is on. Turning off debug logging in 1/2 hour."
+        runIn(1800, "logsOff")
+    } else {
+        logInfoAlways "Debug logging is off."
+    }
 }
 
 
-def contactHandler(evt) 
-{
-def virtualgdstate = virtualgd.currentContact
-// how to determine which contact
+def contactHandler(evt) {
+    def virtualgdstate = virtualgd.currentContact
 
-  if("open" == evt.value)
-    {
-    // contact was opened, turn on a light maybe?
-    if (debug) log.info "Contact is in ${evt.value} state"
-    // reset virtual door if necessary
-    if (virtualgdstate != "open")
-      {
-        mysend("$virtualgd.displayName Opened. Manually syncing with Virtual Device!")   
-        virtualgd.open()
-      }
-     }  
-  if("closed" == evt.value)
-   {
-   // contact was closed, turn off the light?
-    if (debug) log.debug "Contact is in ${evt.value} state"
-    //reset virtual door
-     if (virtualgdstate != "closed")
-      {    
-       mysend("$virtualgd.displayName Closed. Manually syncing with Virtual Device!")   
-       virtualgd.close()
-      }
-   }
+    if ("open" == evt.value) {
+        logDebug "Physical contact reported open."
+        cancelOperationCheck("open")
+        if (virtualgdstate != "open") {
+            mysend("${virtualgd.displayName} Opened. Manually syncing with Virtual Device!")
+            virtualgd.open()
+        }
+    }
+    if ("closed" == evt.value) {
+        logDebug "Physical contact reported closed."
+        cancelOperationCheck("close")
+        if (virtualgdstate != "closed") {
+            mysend("${virtualgd.displayName} Closed. Manually syncing with Virtual Device!")
+            virtualgd.close()
+        }
+    }
 }
 
 def virtualgdcontactHandler(evt) {
-// how to determine which contact
-def realgdstate = sensor.currentContact
-    
-    if (debug) log.debug "in virtualgd contact handler check timeout = $checkTimeout"
+    def realgdstate = sensor.currentContact
 
-  if("open" == evt.value)
-    {
-    // contact was opened, turn on a light maybe?
-    if (debug) log.debug "Contact is in ${evt.value} state"
-    // check to see if door is not in open state if so open
-    if (realgdstate != "open")
-      {
-        if (desclog) log.debug "Opening real gd to correspond with button press."
-         mysend("$virtualgd.displayName Opened. Syncing with Actual Device!")   
-         opener.on()
-         if (debug) log.debug "scheduling checkifActuallyOpened via runin for $checkTimeout seconds."
-         runIn(checkTimeout, checkIfActuallyOpened)
-        
-      }
-     }
-  if("closed" == evt.value)
-   {
-    // contact was closed, turn off the light?
-    if (debug) log.debug "Contact is in ${evt.value} state"
-    if (realgdstate != "closed")
-      {
-        if (descLog) log.info "closing real gd to correspond with button press."
-        mysend("$virtualgd.displayName Closed. Syncing with Actual Device!")   
-        closeTheDoor()
-       
-        if(debug) log.debug "Schedulng checkIfActuallyClosed via runIn for $checkTimeout seconds."
-        runIn(checkTimeout, checkIfActuallyClosed)
-      }
-   }
+    logDebug "Virtual contact reported ${evt.value}. checkTimeout=${checkTimeout}"
+
+    if ("open" == evt.value) {
+        if (realgdstate != "open") {
+            logInfo "Opening real garage door to correspond with button press."
+            mysend("${virtualgd.displayName} Opened. Syncing with Actual Device!")
+            opener.on()
+            scheduleOperationCheck("open")
+        }
+    }
+    if ("closed" == evt.value) {
+        if (realgdstate != "closed") {
+            logInfo "Closing real garage door to correspond with button press."
+            mysend("${virtualgd.displayName} Closed. Syncing with Actual Device!")
+            closeTheDoor()
+        }
+    }
 }
 
 
 private mysend(msg) {
-    
-     // check that contact book is enabled and recipients selected
     if (location.contactBookEnabled && recipients) {
-        if (debug) log.debug("sending notifications to: ${recipients?.size()}")
+        logDebug "Sending notifications to ${recipients?.size()} contacts."
         sendNotificationToContacts(msg, recipients)
+    } else if (sendPushMessage) {
+        logDebug "Sending push notification."
+        sendPushMessage.deviceNotification(msg)
+    }
+}
+
+def checkIfActuallyClosed() {
+    def realgdstate = sensor.currentContact
+    def virtualgdstate = virtualgd.currentContact
+
+    logDebug "Checking if door actually closed. real=${realgdstate}, virtual=${virtualgd.currentContact}"
+
+    if (realgdstate == "open" && virtualgdstate == "closed") {
+        logDebug "Re-opening virtual door because the real door is still open."
+        mysend("Resetting ${virtualgd.displayName} to Open as real device didn't close (beam probably crossed)!")
+        virtualgd.open()
+    }
+
+    clearPendingOperation("close")
+}
+
+def checkIfActuallyOpened() {
+    def realgdstate = sensor.currentContact
+    def virtualgdstate = virtualgd.currentContact
+
+    logDebug "Checking if door actually opened. real=${realgdstate}, virtual=${virtualgd.currentContact}"
+
+    if (realgdstate == "closed" && virtualgdstate == "open") {
+        logDebug "Re-closing virtual door because the real door is still closed."
+        mysend("Resetting ${virtualgd.displayName} to Closed as real device didn't open! (track blocked?)")
+        virtualgd.close()
+    }
+
+    clearPendingOperation("open")
+}
+
+def closeTheDoor() {
+    logDebug "Requested door close. blink=${blink}, lightConfigured=${theLight != null}" 
+
+    cancelBlinkSequence(true)
+
+    if (blink && theLight && (blinkTimes ?: 0) > 0) {
+        startBlinkSequence()
     } else {
-        if (sendPushMessage) {
-         if (debug) log.debug("Sending Push Notification...")
-            sendPushMessage.deviceNotification(msg)
-        } 
-        
+        performDoorClose()
     }
-}
-
-def checkIfActuallyClosed()
-{
-def realgdstate = sensor.currentContact
-def virtualgdstate = virtualgd.currentContact
- 
-    if (debug)
-    {
-      log.debug "In checkIfActuallyClosed."
-      log.debug "in checkifopen ... current state=  $realgdstate"
-      log.debug "in checkifopen ... gd state= $virtualgd.currentContact"
-    }
-   
-    // sync them up if need be set virtual same as actual
-    if (realgdstate == "open" && virtualgdstate == "closed")
-     {
-             log.debug "opening virtual door as it didnt close.. beam probably crossed"
-             mysend("Resetting $virtualgd.displayName to Open as real device didn't close (beam probably crossed)!")   
-             virtualgd.open()
-    }   
-}
-
-def checkIfActuallyOpened()
-{
-def realgdstate = sensor.currentContact
-def virtualgdstate = virtualgd.currentContact
-
-    if (debug) 
-    {
-        log.debug "In checkIfActuallyOpened."
-        log.debug "in checkifopen ... current state=  $realgdstate"
-        log.debug "in checkifopen ... gd state= $virtualgd.currentContact"
-    }
-  
-   
-    // sync them up if need be set virtual same as actual
-    if (realgdstate == "closed" && virtualgdstate == "open")
-     {
-             log.debug "opening virtual door as it didnt open... track blocked?"
-             mysend("Resetting $virtualgd.displayName to Closed as real device didn't open! (track blocked?)")   
-             virtualgd.close()
-    }   
-}
-
-def closeTheDoor()
-{  
-    // close the door 
-    // if option to blink lights blink
-    
-    log.debug "blink = $blink"
-    
-    if (blink)
-    {
-      //  log.debug "will blink"
-        def delaytime = 1000
-        
-        if (blinkTime == "1/2 second")
-          delaytime = 500
-        else if (blinkTime == "1 second")
-          delaytime = 1000
-        else delaytime = 2000
-        
-       // log.debug "blink times = $blinktimes delay = $delaytime"
-            
-      for(int i = 1;i<blinkTimes;i++) {
-         theLight.on()
-          pauseExecution(delaytime)
-         theLight.off()
-          pauseExecution(delaytime)
-      }
-      
-    }
-    
-     opener.on()
 }
 
 def logsOff()
 {
-    log.info "Turning off Logging!"
-    device.updateSetting("debug",[value:"false",type:"bool"])
+    logInfoAlways "Turning off Debug Logging"
+    app.updateSetting("debug", [value: "false", type: "bool"])
+}
+
+private void startBlinkSequence() {
+    Integer cycles = (blinkTimes ?: 0) as Integer
+    Integer delayMillis = blinkDelayMillis()
+
+    if (!cycles) {
+        logDebug "Blink sequence skipped due to zero cycles."
+        performDoorClose()
+        return
+    }
+
+    state.blinkSequence = [remaining: cycles * 2, delay: delayMillis, isOn: false]
+    logDebug "Starting blink sequence for ${cycles} cycles with ${delayMillis}ms delay."
+    handleBlinkStep()
+}
+
+def handleBlinkStep() {
+    def blinkData = state.blinkSequence
+
+    if (!blinkData) {
+        logDebug "Blink sequence no longer active; closing door."
+        performDoorClose()
+        return
+    }
+
+    if (blinkData.remaining <= 0) {
+        logDebug "Blink sequence complete."
+        if (blinkData.isOn && theLight) {
+            theLight.off()
+        }
+        state.remove("blinkSequence")
+        performDoorClose()
+        return
+    }
+
+    if (!theLight) {
+        logDebug "Blink light not configured during sequence; closing door."
+        state.remove("blinkSequence")
+        performDoorClose()
+        return
+    }
+
+    if (blinkData.isOn) {
+        theLight.off()
+    } else {
+        theLight.on()
+    }
+
+    blinkData.isOn = !blinkData.isOn
+    blinkData.remaining = (blinkData.remaining as Integer) - 1
+    state.blinkSequence = blinkData
+
+    runInMillis(blinkData.delay as Integer, "handleBlinkStep")
+}
+
+private void performDoorClose() {
+    unschedule("handleBlinkStep")
+
+    def blinkData = state.remove("blinkSequence")
+    if (blinkData?.isOn && theLight) {
+        theLight.off()
+    }
+
+    logDebug "Sending close command to opener."
+    opener.on()
+    scheduleOperationCheck("close")
+}
+
+private void cancelBlinkSequence(boolean turnOffLight) {
+    unschedule("handleBlinkStep")
+    def blinkData = state.remove("blinkSequence")
+    if (turnOffLight && blinkData?.isOn && theLight) {
+        theLight.off()
+    }
+}
+
+private Integer blinkDelayMillis() {
+    switch (blinkTime) {
+        case "1 second":
+            return 1000
+        case "2 seconds":
+            return 2000
+        default:
+            return 500
+    }
+}
+
+private void scheduleOperationCheck(String type) {
+    String handlerName = type == "open" ? "checkIfActuallyOpened" : "checkIfActuallyClosed"
+    Integer delaySeconds = (checkTimeout ?: 25) as Integer
+
+    cancelOperationCheck(type, handlerName)
+
+    state.pendingOperations = state.pendingOperations ?: [:]
+    state.pendingOperations[type] = now()
+
+    logDebug "Scheduling ${handlerName} in ${delaySeconds} seconds."
+    runIn(delaySeconds, handlerName)
+}
+
+private void cancelOperationCheck(String type, String handlerName = null) {
+    String handler = handlerName ?: (type == "open" ? "checkIfActuallyOpened" : "checkIfActuallyClosed")
+    unschedule(handler)
+
+    if (state.pendingOperations?.remove(type)) {
+        logDebug "Cancelled pending ${type} operation check."
+    }
+
+    if (state.pendingOperations && state.pendingOperations.isEmpty()) {
+        state.remove("pendingOperations")
+    }
+}
+
+private void clearPendingOperation(String type) {
+    cancelOperationCheck(type)
+}
+
+private void logDebug(String msg) {
+    if (debug) {
+        log.debug "${app.label ?: app.name}: ${msg}"
+    }
+}
+
+private void logInfo(String msg) {
+    if (descLog) {
+        log.info "${app.label ?: app.name}: ${msg}"
+    }
+}
+
+private void logInfoAlways(String msg) {
+    log.info "${app.label ?: app.name}: ${msg}"
 }
 

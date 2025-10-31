@@ -16,22 +16,22 @@
  *
  */
 metadata {
-	definition (name: "Simulated Garage Door Opener V2", namespace: "smartthings/testing", author: "SmartThings") {
-		capability "Actuator"
-		capability "Door Control"
+        definition (name: "Simulated Garage Door Opener V2", namespace: "smartthings/testing", author: "SmartThings") {
+                capability "Actuator"
+                capability "Door Control"
         capability "Garage Door Control"
-		capability "Contact Sensor"
-		capability "Refresh"
-		capability "Sensor"
-		capability "Health Check"   
+                capability "Contact Sensor"
+                capability "Refresh"
+                capability "Sensor"
+                capability "Health Check"
      /*   capability "Switch" */
         capability "Configuration"
-        
-	}
 
-	simulator {
-		
-	}
+        }
+
+        simulator {
+
+        }
 
 	tiles {
 		standardTile("toggle", "device.door", width: 2, height: 2) {
@@ -63,37 +63,46 @@ metadata {
 			state "default", label:'close', action:"garage door control.close", icon:"st.doors.garage.garage-closing"
 		}
 		main "toggle"
-		details(["toggle", "open", "close"])
+                details(["toggle", "open", "close"])
 
+        }
 }
+
+preferences {
+        input name: "travelTime", type: "number", title: "Door travel time (seconds)", description: "Delay before door/contact reports final state", defaultValue: 2, required: true
 }
+
 
 def parse(String description) {
 	log.trace "parse($description)"
 }
 
 def open() {
-	sendEvent(name: "door", value: "opening")
-    sendEvent(name: "garageDoor", value: "opening")
-    runIn(2, finishOpening)
+        unschedule("finishClosing")
+        Integer delay = travelTimeSeconds()
+        sendEvent(name: "door", value: "opening", descriptionText: "${device.displayName} is opening")
+        sendEvent(name: "garageDoor", value: "opening", descriptionText: "${device.displayName} is opening")
+        runIn(delay, "finishOpening")
 }
 
 def close() {
-    sendEvent(name: "door", value: "closing")
-    sendEvent(name: "garageDoor", value: "closing")
-	runIn(2, finishClosing)
+    unschedule("finishOpening")
+    Integer delay = travelTimeSeconds()
+    sendEvent(name: "door", value: "closing", descriptionText: "${device.displayName} is closing")
+    sendEvent(name: "garageDoor", value: "closing", descriptionText: "${device.displayName} is closing")
+        runIn(delay, "finishClosing")
 }
 
 def finishOpening() {
-    sendEvent(name: "door", value: "open")
-    sendEvent(name: "garageDoor", value: "open")
-    sendEvent(name: "contact", value: "open")
+    sendEvent(name: "door", value: "open", descriptionText: "${device.displayName} is open")
+    sendEvent(name: "garageDoor", value: "open", descriptionText: "${device.displayName} is open")
+    sendEvent(name: "contact", value: "open", descriptionText: "${device.displayName} is open")
 }
 
 def finishClosing() {
-    sendEvent(name: "door", value: "closed")
-    sendEvent(name: "garageDoor", value: "closed")
-    sendEvent(name: "contact", value: "closed")
+    sendEvent(name: "door", value: "closed", descriptionText: "${device.displayName} is closed")
+    sendEvent(name: "garageDoor", value: "closed", descriptionText: "${device.displayName} is closed")
+    sendEvent(name: "contact", value: "closed", descriptionText: "${device.displayName} is closed")
 }
 
 def configure()
@@ -115,16 +124,21 @@ refresh()
 }
 
 def updated() {
-	log.debug "Executing 'updated'"
-	initialize()
+        log.debug "Executing 'updated'"
+        initialize()
 }
 
 private initialize() {
-	log.debug "Executing 'initialize'"
+        log.debug "Executing 'initialize'"
 
-	sendEvent(name: "DeviceWatch-DeviceStatus", value: "online")
-	sendEvent(name: "healthStatus", value: "online")
-	//sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
+        sendEvent(name: "DeviceWatch-DeviceStatus", value: "online")
+        sendEvent(name: "healthStatus", value: "online")
+        //sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
+}
+
+private Integer travelTimeSeconds() {
+        Integer configured = (settings?.travelTime ?: 2) as Integer
+        return Math.max(configured, 1)
 }
 
 def on()
