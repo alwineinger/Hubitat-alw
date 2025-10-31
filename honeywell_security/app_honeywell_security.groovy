@@ -121,13 +121,17 @@ def lanResponseHandler(fromChildDev) {
       return
     }
 
-    def description = fromChildDev?.description
+    def description
+    if (fromChildDev instanceof hubitat.device.HubResponse) {
+      description = fromChildDev.description
+    } else if (fromChildDev instanceof String) {
+      description = fromChildDev
+    } else {
+      description = fromChildDev?.toString()
+    }
+
     if (!description) {
-      if (fromChildDev instanceof String) {
-        description = fromChildDev
-      } else {
-        return
-      }
+      return
     }
 
     def map = parseLanMessage(description)
@@ -144,12 +148,12 @@ def lanResponseHandler(fromChildDev) {
         return
       }
     } else if (settings?.pluginType) {
-      def eventDescription = fromChildDev?.description ?: description
-      if (!eventDescription?.contains(settings.pluginType)) {
+      if (!description?.contains(settings.pluginType)) {
         return
       }
     }
 
+    ifDebug("Forwarding event to processEvent: ${parsedEvent}")
     processEvent(parsedEvent)
   } catch(MissingMethodException) {
                 // these are events with description: null and data: null, so we'll just pass.
