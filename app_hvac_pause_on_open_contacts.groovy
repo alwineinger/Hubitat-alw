@@ -11,6 +11,8 @@ definition(
     author: "Codex",
     description: "Pause HVAC when any monitored door/window is left open, then restore when all are closed.",
     category: "Convenience",
+    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_vent.png",
+    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_vent@2x.png",
     singleThreaded: true
 )
 
