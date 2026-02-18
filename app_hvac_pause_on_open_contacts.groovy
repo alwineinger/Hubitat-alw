@@ -29,6 +29,7 @@ def mainPage() {
 
         section("Timing") {
             input "openDelayMin", "number", title: "Minutes open before turning HVAC off", required: true, defaultValue: 5
+            input "closeDelayMin", "number", title: "Minutes closed before restoring HVAC", required: true, defaultValue: 1
             input "repeatEnabled", "bool", title: "Repeat reminder notifications while paused", required: true, defaultValue: true
             if (repeatEnabled != false) {
                 input "repeatEveryMin", "number", title: "Repeat every X minutes", required: true, defaultValue: 30
@@ -160,10 +161,12 @@ def evaluateAndSchedule() {
     if (!openContacts) {
         unschedule("repeatNotifyHandler")
         if (state.paused) {
-            restoreHvac()
+            scheduleRestoreHvac()
         }
         return
     }
+
+    unschedule("scheduledRestoreCheck")
 
     if (state.paused) {
         if (repeatEnabled == true) {
@@ -251,6 +254,7 @@ def restoreHvac() {
     }
 
     unschedule("scheduledPauseCheck")
+    unschedule("scheduledRestoreCheck")
     unschedule("repeatNotifyHandler")
 
     String restoreMode = state.savedTstatMode
@@ -278,6 +282,22 @@ def restoreHvac() {
     state.remove("savedFanMode")
 
     sendPush("All doors/windows closed. Thermostat operating mode restored to ${restoreMode ?: 'unchanged'}, fan ${restoreFan ?: 'unchanged'}.")
+}
+
+def scheduledRestoreCheck() {
+    if (!state.paused) {
+        return
+    }
+
+    reconcileOpenState()
+    List openContacts = getOpenContacts()
+    if (openContacts) {
+        logDebug "Restore check skipped: ${openContacts.size()} contact(s) reopened"
+        evaluateAndSchedule()
+        return
+    }
+
+    restoreHvac()
 }
 
 def applyFanRestore() {
@@ -411,6 +431,12 @@ private void validateAndNormalizeSettings() {
         log.warn "openDelayMin was < 0; normalized to 0"
     }
 
+    Integer closeDelay = (closeDelayMin == null ? 1 : (closeDelayMin as Integer))
+    if (closeDelay < 0) {
+        app.updateSetting("closeDelayMin", [value: "0", type: "number"])
+        log.warn "closeDelayMin was < 0; normalized to 0"
+    }
+
     if (repeatEnabled == true) {
         Integer repeatMin = (repeatEveryMin == null ? 30 : (repeatEveryMin as Integer))
         if (repeatMin < 1) {
@@ -418,6 +444,20 @@ private void validateAndNormalizeSettings() {
             log.warn "repeatEveryMin was < 1; normalized to 1"
         }
     }
+}
+
+private void scheduleRestoreHvac() {
+    Integer minutes = Math.max((closeDelayMin ?: 1) as Integer, 0)
+
+    if (minutes == 0) {
+        logDebug "Close delay is 0; restoring HVAC immediately"
+        restoreHvac()
+        return
+    }
+
+    Integer seconds = minutes * 60
+    runIn(seconds, "scheduledRestoreCheck", [overwrite: true])
+    logDebug "Scheduled HVAC restore in ${minutes} minute(s)"
 }
 
 private void logDebug(String msg) {
