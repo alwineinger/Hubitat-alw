@@ -11,6 +11,8 @@ definition(
     author: "Codex",
     description: "Room controller for bath-fan dehumidification",
     category: "Convenience",
+    iconUrl: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator.png",
+    iconX2Url: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator@2x.png",
     singleInstance: false,
     parent: "alw:Dehumidify With Bath Fans Parent"
 )

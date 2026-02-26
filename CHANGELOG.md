@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.1.3
+- Fixed Room Child app compile error by setting non-empty `iconUrl` and `iconX2Url` in `definition(...)`.
+- Added a bug-prevention rule to `AGENTS.md`: for parent/child app sets, verify icon fields in every app file before release.
+
 ## v0.1.2
 - Fixed Parent app compile error by setting non-empty `iconUrl` and `iconX2Url` in `definition(...)`.
 - Added a bug-prevention rule to `AGENTS.md`: app definitions must always provide non-empty icon URLs.
