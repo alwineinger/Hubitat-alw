@@ -3,7 +3,7 @@
  *
  *  One child per room.
  */
-def VERSION = "0.1.0"
+def VERSION = "0.2.0"
 
 definition(
     name: "Dehumidify With Bath Fans Room Child",
@@ -25,7 +25,12 @@ def mainPage() {
     dynamicPage(name: "mainPage") {
         section("Room devices") {
             input "roomHumiditySensors", "capability.relativeHumidityMeasurement", title: "Humidity sensors (one or more)", multiple: true, required: true
-            input "roomFans", "capability.switch", title: "Exhaust fan switches (one or more)", multiple: true, required: true
+            input "roomFans", "capability.switch", title: "Exhaust fan switches (one or more)", multiple: true, required: true, submitOnChange: true
+            input "singleFanMode", "bool", title: "When room automation turns ON, run only one selected fan", defaultValue: false, required: true, submitOnChange: true
+            if (singleFanMode && roomFans && roomFans.size() > 1) {
+                input "singleActiveFan", "capability.switch", title: "Fan to keep ON for this room", multiple: false, required: true
+                paragraph "When this room is ON, all other room fans are forced OFF."
+            }
             input "roomIndicator", "capability.switch", title: "Optional room humidity-high indicator", multiple: false, required: false
         }
 
@@ -73,6 +78,10 @@ Set getHumidityDevices() {
 
 Set getFanDevices() {
     return roomFans?.findAll { it } as Set
+}
+
+Set getWholeHouseActiveFans() {
+    return getRoomOnTargetFans()
 }
 
 Map getRoomHumidityMetric() {
@@ -192,7 +201,7 @@ private BigDecimal readHumidity(dev) {
 private boolean cooldownAllows(Long minimumOffMs) {
     long minMs = minimumOffMs ?: msFromMinutes(15)
     long nowMs = now()
-    roomFans?.every { fan ->
+    getRoomOnTargetFans()?.every { fan ->
         Long lastOff = state.lastAutoOffMsByFanId["${fan.id}"] as Long
         if (!lastOff) return true
         return (nowMs - lastOff) >= minMs
@@ -200,9 +209,16 @@ private boolean cooldownAllows(Long minimumOffMs) {
 }
 
 private void turnRoomOn(String reason) {
-    roomFans?.each { fan ->
+    def targetFans = getRoomOnTargetFans()
+    def nonTargetFans = getRoomNonTargetFans()
+
+    targetFans?.each { fan ->
         safeSwitchOn(fan, reason)
         state.lastAutoOnMsByFanId["${fan.id}"] = now()
+    }
+    nonTargetFans?.each { fan ->
+        safeSwitchOff(fan, "${reason}; non-selected room fan")
+        state.lastAutoOffMsByFanId["${fan.id}"] = now()
     }
     safeSwitchOn(roomIndicator, "room indicator")
     state.roomHumidityHigh = true
@@ -270,6 +286,33 @@ private boolean isPhysicalEvent(evt) {
         if (evt?.hasProperty("isPhysical") && evt.isPhysical() == true) return true
     } catch (ignored) { }
     return false
+}
+
+private Set getRoomOnTargetFans() {
+    def fans = getFanDevices()
+    if (!boolVal(singleFanMode) || !fans || fans.size() <= 1) {
+        return fans
+    }
+
+    String selectedId = "${singleActiveFan?.id}"
+    if (!selectedId) {
+        parent.logDebug("${app.label}: single fan mode enabled but no selected fan is configured; defaulting to all room fans")
+        return fans
+    }
+
+    def selected = fans.findAll { "${it.id}" == selectedId } as Set
+    if (!selected || selected.isEmpty()) {
+        parent.logDebug("${app.label}: selected single fan is not in this room's fan list; defaulting to all room fans")
+        return fans
+    }
+
+    return selected
+}
+
+private Set getRoomNonTargetFans() {
+    def fans = getFanDevices()
+    def targets = getRoomOnTargetFans()
+    return fans?.findAll { fan -> !targets?.any { "${it.id}" == "${fan.id}" } } as Set
 }
 
 private void safeSwitchOn(dev, String reason = "") {
