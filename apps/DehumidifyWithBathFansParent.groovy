@@ -1,3 +1,5 @@
+import groovy.transform.Field
+
 /**
  *  Dehumidify With Bath Fans - Parent
  *
@@ -10,11 +12,11 @@
  */
 def VERSION = "0.2.0"
 
-def LOG_LEVELS = ["Off", "Info", "Debug", "Trace"]
+@Field static final List<String> LOG_LEVELS = ["Off", "Info", "Debug", "Trace"]
 
-def ROOM_ON_COMBINERS = ["OR", "AND"]
+@Field static final List<String> ROOM_ON_COMBINERS = ["OR", "AND"]
 
-def BOOL_OPS = ["allow", "block"]
+@Field static final List<String> BOOL_OPS = ["allow", "block"]
 
 definition(
     name: "Dehumidify With Bath Fans Parent",
