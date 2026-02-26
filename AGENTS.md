@@ -55,6 +55,7 @@ Examples:
   - Avoid duplicate subscriptions; rely on re-init via `updated()`.
 - Logging:
   - Provide log levels Off/Info/Debug/Trace.
+  - Define settings `options` lists used by dynamic preference inputs as `@Field static final` constants (not plain script vars) so Hubitat renders enum dropdown choices reliably in the settings UI.
   - Default Info. Trace is for short-term troubleshooting.
   - Never log sensitive values.
 
