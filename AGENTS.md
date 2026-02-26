@@ -62,6 +62,7 @@ Examples:
 ## Configuration UX guidelines
 - Group settings into sections with short help text.
 - Use defaults that work “out of the box”.
+- For every child app dynamic page, include a required `label` control so each instance can be renamed to a room-specific name from the UI.
 - For complex inputs (e.g., weights per device), use dynamic pages and generate per-device inputs with stable keys.
 - Make driver-specific values configurable (e.g., attribute name + allowed/blocked values lists).
 

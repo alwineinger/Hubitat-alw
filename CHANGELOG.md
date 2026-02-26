@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.2.1
+- Fixed Room Child configuration UX so each child instance exposes a required app label field and can be renamed to a room-specific name.
+- Added a bug-prevention rule to `AGENTS.md`: every child app dynamic page must include a required `label` control.
+
 ## v0.2.0
 - Added Room Child single-fan mode for rooms with multiple exhaust fans: when enabled, automation keeps one selected fan ON and forces the other room fans OFF.
 - Updated whole-house fan aggregation to respect each child room's single-fan selection when whole-house mode activates.

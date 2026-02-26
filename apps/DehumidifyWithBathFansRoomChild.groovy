@@ -3,7 +3,7 @@
  *
  *  One child per room.
  */
-def VERSION = "0.2.0"
+def VERSION = "0.2.1"
 
 definition(
     name: "Dehumidify With Bath Fans Room Child",
@@ -23,6 +23,11 @@ preferences {
 
 def mainPage() {
     dynamicPage(name: "mainPage") {
+        section("Room identity") {
+            label title: "Child app name (e.g., Primary Bath)", required: true
+            paragraph "Tip: rename each child instance to the room it controls for easier management."
+        }
+
         section("Room devices") {
             input "roomHumiditySensors", "capability.relativeHumidityMeasurement", title: "Humidity sensors (one or more)", multiple: true, required: true
             input "roomFans", "capability.switch", title: "Exhaust fan switches (one or more)", multiple: true, required: true, submitOnChange: true
