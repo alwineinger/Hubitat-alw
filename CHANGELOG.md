@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.1.1
+- Fixed Hubitat app compile error by converting Parent/Child app definitions to top-level `definition(...)` blocks (removed invalid `metadata {}` wrapper in app code).
+- Updated `AGENTS.md` with a specific Hubitat app metadata rule to prevent this class of compile failure.
+
 ## v0.1.0
 - Initial release of **Dehumidify With Bath Fans** Hubitat app set.
 - Added Parent app with:

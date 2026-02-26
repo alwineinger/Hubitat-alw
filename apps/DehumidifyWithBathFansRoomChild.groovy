@@ -5,17 +5,15 @@
  */
 def VERSION = "0.1.0"
 
-metadata {
-    definition(
-        name: "Dehumidify With Bath Fans Room Child",
-        namespace: "alw",
-        author: "Codex",
-        description: "Room controller for bath-fan dehumidification",
-        category: "Convenience",
-        singleInstance: false,
-        parent: "alw:Dehumidify With Bath Fans Parent"
-    )
-}
+definition(
+    name: "Dehumidify With Bath Fans Room Child",
+    namespace: "alw",
+    author: "Codex",
+    description: "Room controller for bath-fan dehumidification",
+    category: "Convenience",
+    singleInstance: false,
+    parent: "alw:Dehumidify With Bath Fans Parent"
+)
 
 preferences {
     page(name: "mainPage", title: "Room Controller", install: true, uninstall: true)
