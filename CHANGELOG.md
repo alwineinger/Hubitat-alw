@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.0
+- Added new Hubitat app `Garage Fridge Freezer Open Notifier` for one-or-more contact sensors.
+- Supports configurable open threshold before first alert (default 12 minutes).
+- Supports reminder repeats (default every 10 minutes) with optional max reminder count (default 3).
+- Sends open alerts with per-device opened timestamp/duration and sends one summary notification when all monitored contacts close.
+
 ## v0.2.1
 - Fixed Room Child configuration UX so each child instance exposes a required app label field and can be renamed to a room-specific name.
 - Added a bug-prevention rule to `AGENTS.md`: every child app dynamic page must include a required `label` control.
