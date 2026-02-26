@@ -29,6 +29,7 @@ Production-ready Hubitat app set that recreates a webCoRE-style bathroom-fan deh
 ### Room child app (one per room)
 - 1+ room humidity sensors
 - 1+ exhaust fan switches
+- Optional single-fan mode: when room automation turns ON, keep one selected fan ON while forcing other room fans OFF
 - Optional room humidity-high indicator switch
 
 ## How stale sensors work
@@ -58,9 +59,10 @@ Production-ready Hubitat app set that recreates a webCoRE-style bathroom-fan deh
    - Confirm no repetitive ON/OFF command spam.
 3. **Room automation**
    - Raise room humidity above ON threshold and verify room fans/indicator turn on.
+   - If single-fan mode is enabled for a room, verify only the selected fan turns on and other room fans are turned off.
    - Lower below OFF conditions and verify room fans/indicator turn off.
 4. **Whole-house mode**
-   - Simulate ON thresholds (inside high, outside favorable, temp/gates pass) and verify all room fans turn on + active flag behavior.
+   - Simulate ON thresholds (inside high, outside favorable, temp/gates pass) and verify whole-house runs all designated fans + active flag behavior.
    - Simulate OFF condition and verify whole-house mode exits.
 5. **Gates**
    - Put thermostat op-state into blocked value and verify whole-house ON is blocked.

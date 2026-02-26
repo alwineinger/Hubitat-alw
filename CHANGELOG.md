@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.2.0
+- Added Room Child single-fan mode for rooms with multiple exhaust fans: when enabled, automation keeps one selected fan ON and forces the other room fans OFF.
+- Updated whole-house fan aggregation to respect each child room's single-fan selection when whole-house mode activates.
+
 ## v0.1.3
 - Fixed Room Child app compile error by setting non-empty `iconUrl` and `iconX2Url` in `definition(...)`.
 - Added a bug-prevention rule to `AGENTS.md`: for parent/child app sets, verify icon fields in every app file before release.

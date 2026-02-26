@@ -8,7 +8,7 @@
  *   - Generic attribute gates
  *   - Stale humidity detection + daily notification summary
  */
-def VERSION = "0.1.2"
+def VERSION = "0.2.0"
 
 def LOG_LEVELS = ["Off", "Info", "Debug", "Trace"]
 
@@ -391,7 +391,14 @@ def deactivateWholeHouse(String reason) {
 private Set getAllWholeHouseFans() {
     def fans = [] as Set
     getChildApps()?.each { ch ->
-        ch.getFanDevices()?.each { fans << it }
+        def childWholeHouseFans = null
+        try {
+            childWholeHouseFans = ch.getWholeHouseActiveFans()
+        } catch (ignored) {
+            childWholeHouseFans = null
+        }
+        def childFans = childWholeHouseFans ?: ch.getFanDevices()
+        childFans?.each { fans << it }
     }
     wholeHouseExtraFans?.each { fans << it }
     return fans.findAll { it } as Set
