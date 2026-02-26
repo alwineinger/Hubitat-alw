@@ -33,6 +33,7 @@ Examples:
 ## Coding standards (Hubitat Groovy)
 - App metadata shape (Hubitat Apps):
   - Use top-level `definition(...)` in app files; do **not** wrap app definitions in `metadata {}` (that wrapper is for drivers and causes app compile metadata errors).
+  - In every app `definition(...)`, set **non-empty** `iconUrl` and `iconX2Url` values; empty icon fields can cause Hubitat compile failures.
 - Use standard lifecycle methods:
   - `installed()`, `updated()`, `initialize()`
   - Call `unsubscribe()` and `unschedule()` in `updated()` before re-initializing.
