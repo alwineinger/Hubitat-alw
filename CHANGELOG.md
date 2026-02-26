@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.1.2
+- Fixed Parent app compile error by setting non-empty `iconUrl` and `iconX2Url` in `definition(...)`.
+- Added a bug-prevention rule to `AGENTS.md`: app definitions must always provide non-empty icon URLs.
+
 ## v0.1.1
 - Fixed Hubitat app compile error by converting Parent/Child app definitions to top-level `definition(...)` blocks (removed invalid `metadata {}` wrapper in app code).
 - Updated `AGENTS.md` with a specific Hubitat app metadata rule to prevent this class of compile failure.

@@ -8,7 +8,7 @@
  *   - Generic attribute gates
  *   - Stale humidity detection + daily notification summary
  */
-def VERSION = "0.1.0"
+def VERSION = "0.1.2"
 
 def LOG_LEVELS = ["Off", "Info", "Debug", "Trace"]
 
@@ -22,6 +22,8 @@ definition(
     author: "Codex",
     description: "Parent app for whole-house + per-room bathroom fan dehumidification",
     category: "Convenience",
+    iconUrl: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator.png",
+    iconX2Url: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator@2x.png",
     singleInstance: true,
     installOnOpen: true
 )
