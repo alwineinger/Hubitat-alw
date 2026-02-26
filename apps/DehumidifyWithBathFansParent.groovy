@@ -16,19 +16,17 @@ def ROOM_ON_COMBINERS = ["OR", "AND"]
 
 def BOOL_OPS = ["allow", "block"]
 
-metadata {
-    definition(
-        name: "Dehumidify With Bath Fans Parent",
-        namespace: "alw",
-        author: "Codex",
-        description: "Parent app for whole-house + per-room bathroom fan dehumidification",
-        category: "Convenience",
-        singleInstance: true,
-        installOnOpen: true
-    )
+definition(
+    name: "Dehumidify With Bath Fans Parent",
+    namespace: "alw",
+    author: "Codex",
+    description: "Parent app for whole-house + per-room bathroom fan dehumidification",
+    category: "Convenience",
+    singleInstance: true,
+    installOnOpen: true
+)
 
-    appSetting "logLevel"
-}
+appSetting "logLevel"
 
 preferences {
     page(name: "mainPage", title: "Dehumidify With Bath Fans", install: true, uninstall: true)

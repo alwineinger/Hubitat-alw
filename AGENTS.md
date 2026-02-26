@@ -31,6 +31,8 @@ Examples:
 - `CHANGELOG.md` — human-readable version history
 
 ## Coding standards (Hubitat Groovy)
+- App metadata shape (Hubitat Apps):
+  - Use top-level `definition(...)` in app files; do **not** wrap app definitions in `metadata {}` (that wrapper is for drivers and causes app compile metadata errors).
 - Use standard lifecycle methods:
   - `installed()`, `updated()`, `initialize()`
   - Call `unsubscribe()` and `unschedule()` in `updated()` before re-initializing.
