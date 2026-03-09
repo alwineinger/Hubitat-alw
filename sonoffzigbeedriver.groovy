@@ -18,6 +18,7 @@ metadata {
         input name: "humidityMinInterval", type: "number", title: "Humidity Min Interval (seconds)", defaultValue: 60, range: "1..3600"
         input name: "humidityMaxInterval", type: "number", title: "Humidity Max Interval (seconds)", defaultValue: 600, range: "1..86400"
         input name: "humidityChangeThreshold", type: "number", title: "Humidity Change Threshold (% x100)", defaultValue: 100, range: "1..1000"
+        input name: "humidityOffset", type: "decimal", title: "Humidity Offset (%)", defaultValue: 0, range: "-20..20"
 
         input name: "batteryMinInterval", type: "number", title: "Battery Min Interval (seconds)", defaultValue: 3600, range: "1..86400"
         input name: "batteryMaxInterval", type: "number", title: "Battery Max Interval (seconds)", defaultValue: 7200, range: "1..86400"
@@ -103,8 +104,17 @@ private handleCustomAttributes(descMap) {
         map.value = zigbee.convertHexToInt(descMap.value) / 100.0
         map.unit = "\u00b0C"
     } else if (descMap.cluster == "0405" && descMap.attrId == "0000") { // Humidity
+        def rawHumidity = zigbee.convertHexToInt(descMap.value) / 100.0
+        BigDecimal offset = 0
+        try {
+            offset = (humidityOffset ?: 0).toBigDecimal()
+        } catch (Exception ignored) {
+            offset = 0
+        }
+        def adjustedHumidity = Math.max(0, Math.min(100, rawHumidity + offset))
+        log.debug "Humidity calibration raw=${rawHumidity}% offset=${offset}% adjusted=${adjustedHumidity}%"
         map.name = "humidity"
-        map.value = zigbee.convertHexToInt(descMap.value) / 100.0
+        map.value = adjustedHumidity
         map.unit = "%"
     } else if (descMap.cluster == "0001" && descMap.attrId == "0021") { // Battery
         map.name = "battery"
