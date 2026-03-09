@@ -43,6 +43,8 @@ Examples:
   - Prefer `state` unless concurrent updates demand `atomicState`.
 - Defensive null-handling:
 
+- Numeric safety in Groovy drivers: when bounding or comparing decimal telemetry values (e.g., humidity offsets), keep operands the same numeric type (prefer `BigDecimal` literals like `0G`/`100G` and `BigDecimal#min`/`max`) to avoid ambiguous `Math.min`/`Math.max` overload errors at runtime.
+
 - Zigbee drivers: keep reporting configuration, refresh reads, and parse handlers aligned to the **same attribute IDs** (e.g., battery percentage is typically `0x0021`); verify these three call sites together before release.
 - In drivers, ensure lifecycle methods that call `configure()` actually **send returned Zigbee commands** (e.g., via `sendHubCommand`/`HubMultiAction`) so preferences are applied on install/update.
   - Treat missing attributes/values as unknown; skip logic rather than guessing.

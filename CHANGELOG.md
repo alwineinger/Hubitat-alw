@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.2
+- Fixed `sonoffzigbeedriver.groovy` humidity offset clamping to avoid Groovy `Math.min`/`Math.max` ambiguous overload errors when mixing `Integer` and `BigDecimal` types.
+- Added a bug-prevention rule to `AGENTS.md`: use consistent numeric types (prefer `BigDecimal` literals and `BigDecimal#min`/`max`) when bounding decimal telemetry values.
+
 ## v0.3.1
 - Removed watchdog-style presence handling from `sonoffzigbeedriver.groovy`.
 - Removed recovery scheduling settings and logic (`recoveryInterval`, `presenceTrigger`, recovery checks/events).

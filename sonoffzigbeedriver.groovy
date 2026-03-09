@@ -133,7 +133,7 @@ private BigDecimal applyHumidityOffset(def humidityValue) {
         offset = 0
     }
 
-    def adjustedHumidity = Math.max(0, Math.min(100, rawHumidity + offset))
+    BigDecimal adjustedHumidity = (rawHumidity + offset).max(0G).min(100G)
     log.debug "Humidity calibration raw=${rawHumidity}% offset=${offset}% adjusted=${adjustedHumidity}%"
     return adjustedHumidity as BigDecimal
 }
