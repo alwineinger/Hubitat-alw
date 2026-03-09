@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.3.1
+- Removed watchdog-style presence handling from `sonoffzigbeedriver.groovy`.
+- Removed recovery scheduling settings and logic (`recoveryInterval`, `presenceTrigger`, recovery checks/events).
+- Driver now focuses on Zigbee reporting configuration and explicit refresh reads for temperature, humidity, and battery only.
+
 ## v0.3.0
 - Added new Hubitat app `Garage Fridge Freezer Open Notifier` for one-or-more contact sensors.
 - Supports configurable open threshold before first alert (default 12 minutes).
