@@ -12,11 +12,11 @@ metadata {
     preferences {
         input name: "tempMinInterval", type: "number", title: "Temperature Min Interval (seconds)", defaultValue: 60, range: "1..3600"
         input name: "tempMaxInterval", type: "number", title: "Temperature Max Interval (seconds)", defaultValue: 600, range: "1..86400"
-        input name: "tempChangeThreshold", type: "number", title: "Temperature Change Threshold (°C x100)", defaultValue: 30, range: "1..1000"
+        input name: "tempChangeThreshold", type: "number", title: "Temperature Change Threshold (hundredths of °C; 30 = 0.30°C)", defaultValue: 30, range: "1..1000"
 
         input name: "humidityMinInterval", type: "number", title: "Humidity Min Interval (seconds)", defaultValue: 60, range: "1..3600"
         input name: "humidityMaxInterval", type: "number", title: "Humidity Max Interval (seconds)", defaultValue: 600, range: "1..86400"
-        input name: "humidityChangeThreshold", type: "number", title: "Humidity Change Threshold (% x100)", defaultValue: 100, range: "1..1000"
+        input name: "humidityChangeThreshold", type: "number", title: "Humidity Change Threshold (hundredths of %RH; 100 = 1.00%)", defaultValue: 100, range: "1..1000"
         input name: "humidityOffset", type: "decimal", title: "Humidity Offset (%)", defaultValue: 0, range: "-20..20"
 
         input name: "batteryMinInterval", type: "number", title: "Battery Min Interval (seconds)", defaultValue: 3600, range: "1..86400"
