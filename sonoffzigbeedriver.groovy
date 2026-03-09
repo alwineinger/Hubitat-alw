@@ -33,12 +33,6 @@ def installed() {
 def updated() {
     log.debug "Device updated - reconfiguring."
     unschedule()
-
-    // Call configure and execute returned commands
-    def configCommands = configure()
-    if (configCommands) {
-        sendHubCommand(new hubitat.device.HubMultiAction(configCommands, hubitat.device.Protocol.ZIGBEE))
-    }
     initialize()
 }
 
@@ -60,7 +54,7 @@ def configure() {
     )
 
     // Battery Reporting
-    commands += zigbee.configureReporting(0x0001, 0x0020, 0x20,
+    commands += zigbee.configureReporting(0x0001, 0x0021, 0x20,
         (batteryMinInterval ?: 3600) as Integer, (batteryMaxInterval ?: 7200) as Integer,
         (batteryChangeThreshold ?: 1) as Integer
     )
@@ -73,13 +67,17 @@ def refresh() {
     log.debug "Refreshing device attributes."
     return zigbee.readAttribute(0x0402, 0x0000) + // Temperature
            zigbee.readAttribute(0x0405, 0x0000) + // Humidity
-           zigbee.readAttribute(0x0001, 0x0020) // Battery
+           zigbee.readAttribute(0x0001, 0x0021) // Battery percentage remaining
 }
 
 def parse(String description) {
     log.debug "Parsing Zigbee message: $description"
     def map = zigbee.getEvent(description)
     if (map) {
+        if (map.name == "humidity") {
+            map.value = applyHumidityOffset(map.value)
+            map.unit = "%"
+        }
         sendEvent(map)
     } else {
         def descMap = zigbee.parseDescriptionAsMap(description)
@@ -95,17 +93,8 @@ private handleCustomAttributes(descMap) {
         map.value = zigbee.convertHexToInt(descMap.value) / 100.0
         map.unit = "°C"
     } else if (descMap.cluster == "0405" && descMap.attrId == "0000") { // Humidity
-        def rawHumidity = zigbee.convertHexToInt(descMap.value) / 100.0
-        BigDecimal offset = 0
-        try {
-            offset = (humidityOffset ?: 0).toBigDecimal()
-        } catch (Exception ignored) {
-            offset = 0
-        }
-        def adjustedHumidity = Math.max(0, Math.min(100, rawHumidity + offset))
-        log.debug "Humidity calibration raw=${rawHumidity}% offset=${offset}% adjusted=${adjustedHumidity}%"
         map.name = "humidity"
-        map.value = adjustedHumidity
+        map.value = applyHumidityOffset(zigbee.convertHexToInt(descMap.value) / 100.0)
         map.unit = "%"
     } else if (descMap.cluster == "0001" && descMap.attrId == "0021") { // Battery
         map.name = "battery"
@@ -120,5 +109,31 @@ private handleCustomAttributes(descMap) {
 
 private initialize() {
     log.debug "Initializing device configuration."
-    configure()
+    def commands = []
+    commands += configure()
+    commands += refresh()
+    if (commands) {
+        sendHubCommand(new hubitat.device.HubMultiAction(commands, hubitat.device.Protocol.ZIGBEE))
+    }
+}
+
+private BigDecimal applyHumidityOffset(def humidityValue) {
+    BigDecimal rawHumidity = 0
+    try {
+        rawHumidity = humidityValue.toBigDecimal()
+    } catch (Exception ignored) {
+        log.warn "Received non-numeric humidity value: ${humidityValue}"
+        return 0
+    }
+
+    BigDecimal offset = 0
+    try {
+        offset = (humidityOffset ?: 0).toBigDecimal()
+    } catch (Exception ignored) {
+        offset = 0
+    }
+
+    def adjustedHumidity = Math.max(0, Math.min(100, rawHumidity + offset))
+    log.debug "Humidity calibration raw=${rawHumidity}% offset=${offset}% adjusted=${adjustedHumidity}%"
+    return adjustedHumidity as BigDecimal
 }
