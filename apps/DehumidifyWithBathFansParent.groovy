@@ -62,6 +62,7 @@ def mainPage() {
             input "roomOnCombiner", "enum", title: "Room ON logic combiner", options: ROOM_ON_COMBINERS, defaultValue: "OR", required: true
             input "minimumOffMinutes", "number", title: "Minimum OFF cooldown before automation ON (minutes)", defaultValue: 15, required: true
             input "manualOnAutoOffMinutes", "number", title: "Manual ON auto-OFF delay (minutes)", defaultValue: 10, required: true
+            input "blockedManualFanGraceMinutes", "number", title: "Manual ON grace while operating-state is blocked (minutes)", defaultValue: 5, required: true
             input "physicalOnlyManualOn", "bool", title: "Only treat physical ON as manual when metadata is available", defaultValue: true, required: true
         }
 
@@ -285,6 +286,7 @@ Map getGlobalRoomThresholds() {
         roomOnCombiner: (roomOnCombiner ?: "OR"),
         minimumOffMs: minutesToMs(num(minimumOffMinutes, 15G)),
         manualOnAutoOffMs: minutesToMs(num(manualOnAutoOffMinutes, 10G)),
+        blockedManualFanGraceMs: minutesToMs(num(blockedManualFanGraceMinutes, 5G)),
         physicalOnlyManualOn: boolVal(physicalOnlyManualOn, true)
     ]
 }
@@ -384,7 +386,14 @@ private void ensureWholeHouseOnState() {
 }
 
 def deactivateWholeHouse(String reason) {
-    getAllWholeHouseFans().each { safeSwitchOff(it, "whole-house") }
+    getChildApps()?.each { ch ->
+        try {
+            ch.handleWholeHouseDeactivated(reason)
+        } catch (ignored) {
+            ch.getFanDevices()?.each { safeSwitchOff(it, "whole-house") }
+        }
+    }
+    wholeHouseExtraFans?.each { safeSwitchOff(it, "whole-house extra") }
     safeSwitchOff(wholeHouseIndicator, "whole-house indicator")
     state.houseDehumActive = false
     logInfo("Whole-house dehumidification DEACTIVATED: ${reason}")
@@ -423,6 +432,11 @@ private String getOpStateValue() {
     } catch (ignored) {
         return null
     }
+}
+
+boolean isOpStateBlockedForOn() {
+    def opState = getOpStateValue()
+    return opStateInList(opState, parseCsv(opStateBlockedValues))
 }
 
 private boolean passesModeRestriction() {
