@@ -55,6 +55,7 @@ Examples:
   - Use `runIn()` for delayed one-shot tasks.
   - Use `schedule()` for daily/cron-like work.
   - If using periodic schedules, keep them coarse (e.g., 15 minutes) and cheap.
+  - When an operating-state gate would force an automatic OFF, preserve manual **physical** fan ON events for a configurable grace window, persist hold-until timestamps by fan ID, and re-check the gate at grace expiry before sending `off()`.
 - Subscriptions:
   - Subscribe only to attributes you need.
   - Avoid duplicate subscriptions; rely on re-init via `updated()`.
