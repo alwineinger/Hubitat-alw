@@ -51,6 +51,7 @@ Examples:
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:
   - Only call `device.on()` if switch is currently off; only call `off()` if on.
+- Manual ON classification: classify fan ON events as `physical`, `digital`, or `unknown` using both `evt.type` and `evt.isPhysical()` when available; treat `digital` as non-manual and make `unknown` behavior explicitly configurable in Parent settings/help text.
 - Scheduling best practices:
   - Use `runIn()` for delayed one-shot tasks.
   - Use `schedule()` for daily/cron-like work.

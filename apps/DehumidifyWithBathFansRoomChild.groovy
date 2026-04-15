@@ -3,7 +3,7 @@
  *
  *  One child per room.
  */
-def VERSION = "0.2.1"
+def VERSION = "0.2.2"
 
 definition(
     name: "Dehumidify With Bath Fans Room Child",
@@ -263,11 +263,18 @@ private void handleFanTurnedOn(evt) {
         return
     }
 
-    if (boolVal(global.physicalOnlyManualOn, true)) {
-        if (!isPhysicalEvent(evt)) {
-            parent.logTrace("${app.label}: ignoring non-physical manual ON for ${dev.displayName}")
-            return
-        }
+    String onEventClassification = classifyOnEvent(evt)
+    parent.logTrace("${app.label}: fan ON event classification=${onEventClassification} device=${dev.displayName}")
+
+    if (onEventClassification == "digital") {
+        parent.logTrace("${app.label}: ignoring digital ON event for ${dev.displayName}")
+        return
+    }
+
+    boolean allowUnknownManualOn = boolVal(global.physicalOnlyManualOn, true)
+    if (onEventClassification == "unknown" && !allowUnknownManualOn) {
+        parent.logTrace("${app.label}: ignoring unknown-classification ON event for ${dev.displayName}; enable 'Treat ON as manual when physical/digital metadata is missing' to allow")
+        return
     }
 
     if (parent.isOpStateBlockedForOn()) {
@@ -378,12 +385,24 @@ private boolean isAutomationDemandingOnNow() {
     return absOn || anyRelOn
 }
 
-private boolean isPhysicalEvent(evt) {
+private String classifyOnEvent(evt) {
+    String normalizedType = null
     try {
-        if (evt?.type?.toString()?.toLowerCase() == "physical") return true
-        if (evt?.hasProperty("isPhysical") && evt.isPhysical() == true) return true
+        normalizedType = evt?.type?.toString()?.trim()?.toLowerCase()
     } catch (ignored) { }
-    return false
+
+    if (normalizedType == "physical") return "physical"
+    if (normalizedType == "digital") return "digital"
+
+    try {
+        if (evt?.hasProperty("isPhysical")) {
+            def physical = evt.isPhysical()
+            if (physical == true) return "physical"
+            if (physical == false) return "digital"
+        }
+    } catch (ignored) { }
+
+    return "unknown"
 }
 
 private Set getRoomOnTargetFans() {
