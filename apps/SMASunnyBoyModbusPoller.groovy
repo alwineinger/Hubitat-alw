@@ -29,8 +29,8 @@ preferences {
 @Field static final Integer DEFAULT_POLL_SECONDS = 30
 @Field static final Integer MIN_POLL_SECONDS = 10
 
-@Field static final String CHILD_DRIVER_NAMESPACE = 'hubitat'
-@Field static final String CHILD_DRIVER_NAME = 'Generic Component Sensor'
+@Field static final String CHILD_DRIVER_NAMESPACE = 'Hubitat-alw'
+@Field static final String CHILD_DRIVER_NAME = 'SMA Sunny Boy Inverter Child'
 
 @Field static final Map ESSENTIAL_REGISTERS = [
     currentPowerW      : [address: 30775, count: 2, dataType: 'S32', scale: 0, unit: 'W',  description: 'Current PV feed-in active power all line conductors'],
@@ -288,7 +288,7 @@ def pollSingleInverter(Map data = [:]) {
         }
 
         try {
-            sendHubCommand(new hubitat.device.HubAction(hexCmd, hubitat.device.Protocol.TCP, options))
+            sendHubCommand(new hubitat.device.HubAction(hexCmd, hubitat.device.Protocol.LAN, options))
         } catch (Exception ex) {
             log.error "Failed to send Modbus request tx=${txId} ip=${ip}: ${ex.message}"
             state.pending.remove(txId.toString())
@@ -374,6 +374,12 @@ def parseResponse(resp) {
 
             Object finalVal = (defn.scale ?: 0) as Integer == 0 ? val.longValue() : val
             sendChildEvent(child, defn.name as String, finalVal, defn.unit as String)
+            if ((defn.name as String) == 'currentPowerW') {
+                sendChildEvent(child, 'power', finalVal, 'W')
+            } else if ((defn.name as String) == 'dailyEnergyWh' && finalVal instanceof Number) {
+                BigDecimal kwh = (((finalVal as Number).toBigDecimal()) / 1000G).setScale(3, BigDecimal.ROUND_HALF_UP)
+                sendChildEvent(child, 'energy', kwh, 'kWh')
+            }
 
             if ((defn.name as String) == 'serialNumber') {
                 String last4 = "${finalVal}".takeRight(4)

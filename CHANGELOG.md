@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.3
+- Fixed SMA Sunny Boy Modbus Poller child creation by switching to a repository-provided child driver (`SMA Sunny Boy Inverter Child`) instead of relying on missing built-in `Generic Component Sensor`.
+- Added new `drivers/SMASunnyBoyInverterChild.groovy` with `Refresh`, `PowerMeter`, and `EnergyMeter` capabilities plus SMA telemetry attributes used by the app.
+- Fixed Modbus request transport by using `hubitat.device.Protocol.LAN` for `HubAction` (resolves `No such property: TCP` send failures).
+- Added a bug-prevention rule to `AGENTS.md`: for LAN/TCP app networking, use supported Hubitat protocol enums and verify child driver namespace/name matches an installed driver.
+
 ## v0.3.2
 - Fixed `sonoffzigbeedriver.groovy` humidity offset clamping to avoid Groovy `Math.min`/`Math.max` ambiguous overload errors when mixing `Integer` and `BigDecimal` types.
 - Added a bug-prevention rule to `AGENTS.md`: use consistent numeric types (prefer `BigDecimal` literals and `BigDecimal#min`/`max`) when bounding decimal telemetry values.
