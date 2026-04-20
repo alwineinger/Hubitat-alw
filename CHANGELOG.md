@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.3.9
+- Fixed Hubitat settings UX for Modbus register offsets: changed `registerAddressOffset` from `number` to `enum` (`0` / `-1`) so hubs that block minus-sign entry can still select `-1`.
+- Added explicit integer parsing helper for numeric settings sourced from enum/text values, ensuring robust conversion and fallback behavior.
+- Added a bug-prevention rule to `AGENTS.md`: when negative values are required in app settings, avoid `type: 'number'` and parse enum/text inputs explicitly.
+
 ## v0.3.8
 - Added Modbus interoperability controls in `SMA Sunny Boy Modbus Poller`:
   - `Register address offset` (default `0`, set `-1` for 0-based register maps)

@@ -32,6 +32,7 @@ preferences {
 @Field static final Integer DEFAULT_INVERTER_STAGGER_MS = 1200
 @Field static final Integer DEFAULT_REGISTER_ADDRESS_OFFSET = 0
 @Field static final Integer MIN_REGISTER_ADDRESS = 0
+@Field static final List<String> REGISTER_OFFSET_OPTIONS = ['0', '-1']
 
 @Field static final String CHILD_DRIVER_NAMESPACE = 'Hubitat-alw'
 @Field static final String CHILD_DRIVER_NAME = 'SMA Sunny Boy Inverter Child'
@@ -122,7 +123,8 @@ def mainPage() {
             input name: 'fullRegisterSet', type: 'bool', title: 'Enable full SMA register set', defaultValue: false
             input name: 'requestSpacingMs', type: 'number', title: 'Delay between Modbus requests (ms)', defaultValue: DEFAULT_REQUEST_SPACING_MS, required: true
             input name: 'inverterStaggerMs', type: 'number', title: 'Delay between inverter poll starts (ms)', defaultValue: DEFAULT_INVERTER_STAGGER_MS, required: true
-            input name: 'registerAddressOffset', type: 'number', title: 'Register address offset (for device maps that are 0-based)', defaultValue: DEFAULT_REGISTER_ADDRESS_OFFSET, required: true,
+            input name: 'registerAddressOffset', type: 'enum', title: 'Register address offset (for device maps that are 0-based)', defaultValue: "${DEFAULT_REGISTER_ADDRESS_OFFSET}", required: true,
+                options: REGISTER_OFFSET_OPTIONS,
                 description: 'Use -1 if your device expects 0-based Modbus addresses for 30xxx/40xxx docs.'
             input name: 'readFunctionCode', type: 'enum', title: 'Read function', required: true, defaultValue: '03',
                 options: ['03': '03 - Read Holding Registers', '04': '04 - Read Input Registers']
@@ -278,7 +280,7 @@ def pollSingleInverter(Map data = [:]) {
 
     Integer port = (settings.modbusPort ?: DEFAULT_PORT) as Integer
     Integer slave = (settings.unitId ?: DEFAULT_UNIT_ID) as Integer
-    Integer offset = (settings.registerAddressOffset ?: DEFAULT_REGISTER_ADDRESS_OFFSET) as Integer
+    Integer offset = parseIntegerSetting(settings.registerAddressOffset, DEFAULT_REGISTER_ADDRESS_OFFSET)
     Integer functionCode = selectedReadFunctionCode()
 
     List<Map> registerDefs = selectedRegisterDefinitions()
@@ -553,6 +555,15 @@ private String buildModbusReadRequest(Integer txId, Integer unitId, Integer func
 private Integer selectedReadFunctionCode() {
     String raw = (settings.readFunctionCode ?: '03').toString()
     return raw == '04' ? 0x04 : 0x03
+}
+
+private Integer parseIntegerSetting(Object raw, Integer fallback) {
+    if (raw == null) return fallback
+    try {
+        return raw.toString().trim().toInteger()
+    } catch (Exception ignored) {
+        return fallback
+    }
 }
 
 /**
