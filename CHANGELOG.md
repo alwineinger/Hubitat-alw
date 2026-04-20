@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.3.8
+- Added Modbus interoperability controls in `SMA Sunny Boy Modbus Poller`:
+  - `Register address offset` (default `0`, set `-1` for 0-based register maps)
+  - `Read function` selector (`03` Holding Registers or `04` Input Registers)
+- Updated Modbus request/response handling to support FC03 and FC04 and validate callback function code against the active setting.
+- Added request trace details that log both adjusted and raw register starts to simplify troubleshooting address-map mismatches.
+- Added a bug-prevention rule to `AGENTS.md`: make Modbus address base and read function configurable and verify a known register via external client (`mbpoll`) before release.
+
+## v0.3.7
+- Added configurable Modbus pacing in `SMA Sunny Boy Modbus Poller`:
+  - `Delay between Modbus requests (ms)` (default 350ms)
+  - `Delay between inverter poll starts (ms)` (default 1200ms)
+  These defaults reduce back-to-back socket pressure that can cause repeated Hubitat `Read timed out` warnings on some inverter/network combinations.
+- Added a targeted warning when an inverter has been polled but no Modbus response has ever been received, guiding checks for inverter Modbus/TCP enablement, Unit ID, and network ACL/firewall.
+- Added a bug-prevention rule to `AGENTS.md`: multi-device Modbus polling should expose conservative pacing controls to avoid inverter TCP read timeouts.
+
 ## v0.3.6
 - Fixed SMA Sunny Boy Modbus Poller request tracking to key pending Modbus callbacks by unique per-send `requestId` instead of by transaction ID alone, preventing cross-inverter collisions when multiple devices are polled concurrently.
 - Added a txId fallback matcher that only resolves when exactly one pending request exists for that txId, avoiding accidental mis-association.
