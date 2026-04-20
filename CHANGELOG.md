@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.5
+- Fixed SMA Sunny Boy Modbus Poller Modbus/TCP send options to set HubAction `type` as the literal `'LAN_TYPE_CLIENT'`, resolving runtime `MissingPropertyException: No such property: LAN_TYPE_CLIENT for class: hubitat.device.HubAction$Type` in `pollSingleInverter`.
+- Added a bug-prevention rule to `AGENTS.md`: for app-based raw Modbus/TCP option maps, use string literal `'LAN_TYPE_CLIENT'` instead of `hubitat.device.HubAction.Type.LAN_TYPE_CLIENT`.
+
 ## v0.3.4
 - Fixed SMA Sunny Boy Modbus Poller Modbus TCP request options to use explicit LAN client fields (`destinationAddress`, `destinationPort`, `encoding`) for raw hex requests, addressing repeated `Cannot get property 'host' on null object` warnings during polling.
 - Added a bug-prevention rule to `AGENTS.md`: for app-based raw Modbus/TCP, use explicit `LAN_TYPE_CLIENT` option fields and validate callback behavior in live logs to catch null host/request issues early.

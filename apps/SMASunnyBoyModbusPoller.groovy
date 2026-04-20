@@ -283,7 +283,7 @@ def pollSingleInverter(Map data = [:]) {
         ]
 
         Map options = [
-            type: hubitat.device.HubAction.Type.LAN_TYPE_CLIENT,
+            type: 'LAN_TYPE_CLIENT',
             destinationAddress: ip,
             destinationPort: "${port}",
             encoding: hubitat.device.HubAction.Encoding.HEX_STRING,
