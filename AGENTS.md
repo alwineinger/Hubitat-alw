@@ -49,6 +49,7 @@ Examples:
 - In drivers, ensure lifecycle methods that call `configure()` actually **send returned Zigbee commands** (e.g., via `sendHubCommand`/`HubMultiAction`) so preferences are applied on install/update.
 - For LAN/TCP app networking, use supported Hubitat protocol enums (`hubitat.device.Protocol.LAN`) and verify child driver namespace/name values exactly match an installed driver before release.
   - For raw Modbus/TCP `HubAction` sends from apps, prefer explicit client options (`type: LAN_TYPE_CLIENT`, `destinationAddress`, `destinationPort`, `encoding: HEX_STRING`) instead of only `destination`, then verify callback parsing works without null host/request warnings in live logs.
+  - For raw Modbus/TCP `HubAction` option maps, set `type` as the literal string `'LAN_TYPE_CLIENT'` (not `hubitat.device.HubAction.Type.LAN_TYPE_CLIENT`) to avoid runtime `MissingPropertyException` on some hubs.
   - Treat missing attributes/values as unknown; skip logic rather than guessing.
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:
