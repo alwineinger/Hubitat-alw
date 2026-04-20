@@ -54,6 +54,7 @@ Examples:
   - For multi-device Modbus polling, provide configurable inter-request and inter-inverter pacing (with conservative defaults) to avoid overdriving inverter TCP stacks and triggering repeated read timeouts.
   - When integrating third-party Modbus maps, make address base (`0`/`-1` offset) and read function (`03` holding vs `04` input) configurable; verify at least one known register with an external client (`mbpoll`) before release.
   - Log a copy/paste `mbpoll` verification command per inverter (including selected function code and base flag) during initialization so users can validate app settings against a known-good external read.
+  - If an inverter has never produced a successful Modbus response, poll only one known-good probe register (e.g., serial number) until first success to avoid repeated timeout storms from multi-register batches.
   - Treat missing attributes/values as unknown; skip logic rather than guessing.
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:

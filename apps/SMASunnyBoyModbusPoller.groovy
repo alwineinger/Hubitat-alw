@@ -298,7 +298,7 @@ def pollSingleInverter(Map data = [:]) {
     Integer offset = parseIntegerSetting(settings.registerAddressOffset, DEFAULT_REGISTER_ADDRESS_OFFSET)
     Integer functionCode = selectedReadFunctionCode()
 
-    List<Map> registerDefs = selectedRegisterDefinitions()
+    List<Map> registerDefs = selectedRegisterDefinitionsForIp(ip)
     List<Map> batches = buildReadBatches(registerDefs, 20)
     Integer spacingMs = Math.max((settings.requestSpacingMs ?: DEFAULT_REQUEST_SPACING_MS) as Integer, 0)
 
@@ -355,6 +355,28 @@ def pollSingleInverter(Map data = [:]) {
     }
 
     state.ipMeta[ip] = (state.ipMeta[ip] ?: [:]) + [lastPoll: now()]
+}
+
+private List<Map> selectedRegisterDefinitionsForIp(String ip) {
+    List<Map> defs = selectedRegisterDefinitions()
+    Long lastRx = (state.ipMeta[ip]?.lastRx ?: 0L) as Long
+    if (lastRx > 0L) {
+        return defs
+    }
+
+    Map serialDef = (ESSENTIAL_REGISTERS?.serialNumber ?: [:]) as Map
+    if (!serialDef?.address) return defs
+
+    log.info "Connectivity probe mode for ${ip}: polling serial register only until first response is received."
+    return [[
+        name: 'serialNumber',
+        address: serialDef.address,
+        count: serialDef.count,
+        dataType: serialDef.dataType,
+        scale: serialDef.scale,
+        unit: serialDef.unit,
+        description: serialDef.description
+    ]]
 }
 
 /**
