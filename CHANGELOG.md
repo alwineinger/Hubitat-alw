@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.6
+- Fixed SMA Sunny Boy Modbus Poller request tracking to key pending Modbus callbacks by unique per-send `requestId` instead of by transaction ID alone, preventing cross-inverter collisions when multiple devices are polled concurrently.
+- Added a txId fallback matcher that only resolves when exactly one pending request exists for that txId, avoiding accidental mis-association.
+- Reduced log noise by safely ignoring `componentRefresh` calls that do not include a valid child device context.
+- Added a bug-prevention rule to `AGENTS.md`: in multi-device Modbus polling, track outstanding requests by unique `requestId` and treat `txId` as metadata.
+
 ## v0.3.5
 - Fixed SMA Sunny Boy Modbus Poller Modbus/TCP send options to set HubAction `type` as the literal `'LAN_TYPE_CLIENT'`, resolving runtime `MissingPropertyException: No such property: LAN_TYPE_CLIENT for class: hubitat.device.HubAction$Type` in `pollSingleInverter`.
 - Added a bug-prevention rule to `AGENTS.md`: for app-based raw Modbus/TCP option maps, use string literal `'LAN_TYPE_CLIENT'` instead of `hubitat.device.HubAction.Type.LAN_TYPE_CLIENT`.
