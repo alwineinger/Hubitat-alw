@@ -28,6 +28,10 @@ preferences {
 @Field static final Integer DEFAULT_UNIT_ID = 3
 @Field static final Integer DEFAULT_POLL_SECONDS = 30
 @Field static final Integer MIN_POLL_SECONDS = 10
+@Field static final Integer DEFAULT_REQUEST_SPACING_MS = 350
+@Field static final Integer DEFAULT_INVERTER_STAGGER_MS = 1200
+@Field static final Integer DEFAULT_REGISTER_ADDRESS_OFFSET = 0
+@Field static final Integer MIN_REGISTER_ADDRESS = 0
 
 @Field static final String CHILD_DRIVER_NAMESPACE = 'Hubitat-alw'
 @Field static final String CHILD_DRIVER_NAME = 'SMA Sunny Boy Inverter Child'
@@ -116,6 +120,12 @@ def mainPage() {
             input name: 'unitId', type: 'number', title: 'Unit ID / Slave ID', defaultValue: DEFAULT_UNIT_ID, required: true
             input name: 'pollSeconds', type: 'number', title: 'Polling interval seconds', defaultValue: DEFAULT_POLL_SECONDS, required: true
             input name: 'fullRegisterSet', type: 'bool', title: 'Enable full SMA register set', defaultValue: false
+            input name: 'requestSpacingMs', type: 'number', title: 'Delay between Modbus requests (ms)', defaultValue: DEFAULT_REQUEST_SPACING_MS, required: true
+            input name: 'inverterStaggerMs', type: 'number', title: 'Delay between inverter poll starts (ms)', defaultValue: DEFAULT_INVERTER_STAGGER_MS, required: true
+            input name: 'registerAddressOffset', type: 'number', title: 'Register address offset (for device maps that are 0-based)', defaultValue: DEFAULT_REGISTER_ADDRESS_OFFSET, required: true,
+                description: 'Use -1 if your device expects 0-based Modbus addresses for 30xxx/40xxx docs.'
+            input name: 'readFunctionCode', type: 'enum', title: 'Read function', required: true, defaultValue: '03',
+                options: ['03': '03 - Read Holding Registers', '04': '04 - Read Input Registers']
         }
         section('Logging') {
             input name: 'debugLogging', type: 'bool', title: 'Enable debug logging', defaultValue: true
@@ -237,9 +247,10 @@ def pollAll() {
     }
 
     Integer idx = 0
+    Integer staggerMs = Math.max((settings.inverterStaggerMs ?: DEFAULT_INVERTER_STAGGER_MS) as Integer, 0)
     inverterList.each { inv ->
-        Integer staggerMs = idx * 700
-        runInMillis(staggerMs, 'pollSingleInverter', [overwrite: false, data: [ip: inv.ip]])
+        Integer startDelay = idx * staggerMs
+        runInMillis(startDelay, 'pollSingleInverter', [overwrite: false, data: [ip: inv.ip]])
         idx++
     }
 
@@ -258,12 +269,21 @@ private void scheduleNextPoll(Integer inSeconds = null) {
 def pollSingleInverter(Map data = [:]) {
     String ip = data?.ip as String
     if (!ip) return
+    Map priorMeta = (state.ipMeta[ip] ?: [:]) as Map
+    Long lastRx = priorMeta?.lastRx as Long
+    Long lastPoll = priorMeta?.lastPoll as Long
+    if (lastPoll && !lastRx) {
+        log.warn "No Modbus responses received yet from ${ip}. Verify inverter Modbus/TCP enablement, Unit ID, and network ACL/firewall."
+    }
 
     Integer port = (settings.modbusPort ?: DEFAULT_PORT) as Integer
     Integer slave = (settings.unitId ?: DEFAULT_UNIT_ID) as Integer
+    Integer offset = (settings.registerAddressOffset ?: DEFAULT_REGISTER_ADDRESS_OFFSET) as Integer
+    Integer functionCode = selectedReadFunctionCode()
 
     List<Map> registerDefs = selectedRegisterDefinitions()
     List<Map> batches = buildReadBatches(registerDefs, 20)
+    Integer spacingMs = Math.max((settings.requestSpacingMs ?: DEFAULT_REQUEST_SPACING_MS) as Integer, 0)
 
     if (!batches) {
         log.warn "No register batches to poll for ${ip}"
@@ -272,15 +292,22 @@ def pollSingleInverter(Map data = [:]) {
 
     batches.eachWithIndex { Map batch, Integer i ->
         Integer txId = nextTransactionId()
-        String requestId = buildRequestId(ip, txId, batch.start as Integer)
-        String hexCmd = buildModbusReadRequest(txId, slave, batch.start as Integer, batch.quantity as Integer)
+        Integer adjustedStart = (batch.start as Integer) + offset
+        if (adjustedStart < MIN_REGISTER_ADDRESS) {
+            log.warn "Skipping batch start=${batch.start} for ${ip}: adjusted start ${adjustedStart} is invalid."
+            return
+        }
+        String requestId = buildRequestId(ip, txId, adjustedStart)
+        String hexCmd = buildModbusReadRequest(txId, slave, functionCode, adjustedStart, batch.quantity as Integer)
 
         state.pending[requestId] = [
             requestId: requestId,
             txId: txId,
             ip: ip,
             startReg: batch.start,
+            requestedStartReg: adjustedStart,
             quantity: batch.quantity,
+            functionCode: functionCode,
             at: now(),
             defs: batch.defs.collect { [name: it.name, address: it.address, count: it.count, dataType: it.dataType, scale: it.scale, unit: it.unit, description: it.description] }
         ]
@@ -295,7 +322,7 @@ def pollSingleInverter(Map data = [:]) {
             requestId: requestId
         ]
         if (traceLogging) {
-            log.trace "TX ${txId} -> ${ip}:${port} start=${batch.start} qty=${batch.quantity} hex=${hexCmd}"
+            log.trace "TX ${txId} -> ${ip}:${port} fc=${String.format('%02X', functionCode)} start=${adjustedStart} (raw=${batch.start}) qty=${batch.quantity} hex=${hexCmd}"
         }
 
         try {
@@ -305,8 +332,8 @@ def pollSingleInverter(Map data = [:]) {
             state.pending.remove(requestId)
         }
 
-        if (i < batches.size() - 1) {
-            pauseExecution(150)
+        if (i < batches.size() - 1 && spacingMs > 0) {
+            pauseExecution(spacingMs)
         }
     }
 
@@ -362,6 +389,7 @@ def parseResponse(resp) {
         }
 
         String ip = pending.ip as String
+        state.ipMeta[ip] = (state.ipMeta[ip] ?: [:]) + [lastRx: now()]
         def child = getChildDevice(childDniForIp(ip))
         if (!child) {
             log.warn "No child device found for IP ${ip}"
@@ -371,6 +399,12 @@ def parseResponse(resp) {
         if (parsed.error) {
             log.error "Modbus exception from ${ip} tx=${txId} code=${parsed.exceptionCode}"
             sendChildEvent(child, 'lastError', "Exception code ${parsed.exceptionCode}", '')
+            return
+        }
+
+        Integer expectedFc = (pending.functionCode ?: selectedReadFunctionCode()) as Integer
+        if ((parsed.function as Integer) != expectedFc) {
+            log.warn "Ignoring response with unexpected function=${parsed.function} expected=${expectedFc} ip=${ip} tx=${txId}"
             return
         }
 
@@ -472,7 +506,7 @@ private Map parseModbusTcpResponse(byte[] response) {
         return [txId: txId, unit: unit, function: function, error: true, exceptionCode: exceptionCode]
     }
 
-    if (function != 0x03) {
+    if (function != 0x03 && function != 0x04) {
         throw new IllegalStateException("Unexpected function=${function} txId=${txId}")
     }
 
@@ -494,7 +528,7 @@ private Map parseModbusTcpResponse(byte[] response) {
 /**
  * Builds a raw Modbus TCP Read Holding Registers request (FC03) as hex string.
  */
-private String buildModbusReadRequest(Integer txId, Integer unitId, Integer startReg, Integer quantity) {
+private String buildModbusReadRequest(Integer txId, Integer unitId, Integer functionCode, Integer startReg, Integer quantity) {
     byte[] frame = new byte[12]
 
     // MBAP
@@ -507,13 +541,18 @@ private String buildModbusReadRequest(Integer txId, Integer unitId, Integer star
     frame[6] = (byte) (unitId & 0xFF)
 
     // PDU
-    frame[7] = 0x03
+    frame[7] = (byte) (functionCode & 0xFF)
     frame[8] = (byte) ((startReg >> 8) & 0xFF)
     frame[9] = (byte) (startReg & 0xFF)
     frame[10] = (byte) ((quantity >> 8) & 0xFF)
     frame[11] = (byte) (quantity & 0xFF)
 
     return frame.collect { String.format('%02X', (it & 0xFF)) }.join()
+}
+
+private Integer selectedReadFunctionCode() {
+    String raw = (settings.readFunctionCode ?: '03').toString()
+    return raw == '04' ? 0x04 : 0x03
 }
 
 /**
