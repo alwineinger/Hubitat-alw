@@ -272,9 +272,12 @@ def pollSingleInverter(Map data = [:]) {
 
     batches.eachWithIndex { Map batch, Integer i ->
         Integer txId = nextTransactionId()
+        String requestId = buildRequestId(ip, txId, batch.start as Integer)
         String hexCmd = buildModbusReadRequest(txId, slave, batch.start as Integer, batch.quantity as Integer)
 
-        state.pending[txId.toString()] = [
+        state.pending[requestId] = [
+            requestId: requestId,
+            txId: txId,
             ip: ip,
             startReg: batch.start,
             quantity: batch.quantity,
@@ -289,7 +292,7 @@ def pollSingleInverter(Map data = [:]) {
             encoding: hubitat.device.HubAction.Encoding.HEX_STRING,
             ignoreResponse: false,
             callback: 'parseResponse',
-            requestId: txId
+            requestId: requestId
         ]
         if (traceLogging) {
             log.trace "TX ${txId} -> ${ip}:${port} start=${batch.start} qty=${batch.quantity} hex=${hexCmd}"
@@ -299,7 +302,7 @@ def pollSingleInverter(Map data = [:]) {
             sendHubCommand(new hubitat.device.HubAction(hexCmd, hubitat.device.Protocol.LAN, options))
         } catch (Exception ex) {
             log.error "Failed to send Modbus request tx=${txId} ip=${ip}: ${ex.message}"
-            state.pending.remove(txId.toString())
+            state.pending.remove(requestId)
         }
 
         if (i < batches.size() - 1) {
@@ -314,6 +317,10 @@ def pollSingleInverter(Map data = [:]) {
  * Manual refresh command routed from component child devices.
  */
 def componentRefresh(cd) {
+    if (!cd?.deviceNetworkId) {
+        logDebug 'componentRefresh called without a valid child device context; ignoring.'
+        return
+    }
     String ip = ipFromChildDni(cd?.deviceNetworkId)
     if (!ip) {
         log.warn "componentRefresh called with unknown child DNI: ${cd?.deviceNetworkId}"
@@ -344,9 +351,13 @@ def parseResponse(resp) {
 
         Map parsed = parseModbusTcpResponse(bytes)
         Integer txId = parsed.txId as Integer
-        Map pending = state.pending.remove(txId.toString())
+        String requestId = (resp?.requestId ?: '').toString()
+        Map pending = requestId ? state.pending.remove(requestId) : null
         if (!pending) {
-            log.warn "Received response for unknown txId=${txId}"
+            pending = popSinglePendingForTxId(txId)
+        }
+        if (!pending) {
+            log.warn "Received response for unknown request/tx requestId=${requestId ?: 'n/a'} txId=${txId}"
             return
         }
 
@@ -631,6 +642,24 @@ private Integer nextTransactionId() {
     if (next > 0xFFFF) next = 1
     state.txCounter = next
     return current
+}
+
+private String buildRequestId(String ip, Integer txId, Integer startReg) {
+    String ipToken = (ip ?: 'unknown').replace('.', '-')
+    return "${app.id}-${now()}-${ipToken}-${startReg}-${txId}"
+}
+
+private Map popSinglePendingForTxId(Integer txId) {
+    if (!state.pending || txId == null) return null
+    List<String> keys = state.pending.findAll { String k, Map v ->
+        ((v?.txId ?: -1) as Integer) == txId
+    }.collect { String k, Map v -> k }
+    if (!keys) return null
+    if (keys.size() > 1) {
+        log.warn "Multiple pending entries for txId=${txId}; keeping requestId matching required."
+        return null
+    }
+    return state.pending.remove(keys[0])
 }
 
 private void sendChildEvent(child, String name, Object value, String unit = null) {
