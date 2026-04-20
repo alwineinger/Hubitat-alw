@@ -47,6 +47,7 @@ Examples:
 
 - Zigbee drivers: keep reporting configuration, refresh reads, and parse handlers aligned to the **same attribute IDs** (e.g., battery percentage is typically `0x0021`); verify these three call sites together before release.
 - In drivers, ensure lifecycle methods that call `configure()` actually **send returned Zigbee commands** (e.g., via `sendHubCommand`/`HubMultiAction`) so preferences are applied on install/update.
+ - For LAN/TCP app networking, use supported Hubitat protocol enums (`hubitat.device.Protocol.LAN`) and verify child driver namespace/name values exactly match an installed driver before release.
   - Treat missing attributes/values as unknown; skip logic rather than guessing.
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:
