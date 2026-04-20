@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.3.11
+- Updated SMA Sunny Boy Modbus Poller startup behavior to use a serial-number-only connectivity probe for inverters that have not yet returned any successful Modbus response.
+- This reduces repeated timeout bursts while validating first contact and automatically returns to the configured register set after the first successful response.
+- Added a bug-prevention rule to `AGENTS.md`: for no-response inverters, probe a known-good single register before full-batch polling.
+
+## v0.3.10
+- Improved SMA Sunny Boy Modbus Poller settings help text for register offset to explicitly map `mbpoll -0` behavior to app offset `0`.
+- Added initialization-time info logs that print a copy/paste `mbpoll` command per configured inverter, including current Unit ID, function code selection, and addressing mode for quick external validation.
+- Added a bug-prevention rule to `AGENTS.md`: always log a per-inverter `mbpoll` verification command at initialization so on-hub settings can be compared against known-good manual reads.
+
 ## v0.3.9
 - Fixed Hubitat settings UX for Modbus register offsets: changed `registerAddressOffset` from `number` to `enum` (`0` / `-1`) so hubs that block minus-sign entry can still select `-1`.
 - Added explicit integer parsing helper for numeric settings sourced from enum/text values, ensuring robust conversion and fallback behavior.
