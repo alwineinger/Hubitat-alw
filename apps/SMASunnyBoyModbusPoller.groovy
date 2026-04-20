@@ -125,7 +125,7 @@ def mainPage() {
             input name: 'inverterStaggerMs', type: 'number', title: 'Delay between inverter poll starts (ms)', defaultValue: DEFAULT_INVERTER_STAGGER_MS, required: true
             input name: 'registerAddressOffset', type: 'enum', title: 'Register address offset (for device maps that are 0-based)', defaultValue: "${DEFAULT_REGISTER_ADDRESS_OFFSET}", required: true,
                 options: REGISTER_OFFSET_OPTIONS,
-                description: 'Use -1 if your device expects 0-based Modbus addresses for 30xxx/40xxx docs.'
+                description: 'Set 0 for mbpoll -0 style addressing; set -1 only when your map is 1-based and Hubitat must subtract 1.'
             input name: 'readFunctionCode', type: 'enum', title: 'Read function', required: true, defaultValue: '03',
                 options: ['03': '03 - Read Holding Registers', '04': '04 - Read Input Registers']
         }
@@ -173,9 +173,24 @@ def initialize() {
         log.warn 'No valid inverter IPs configured. Polling will not start.'
         return
     }
+    logMbpollReference(inverterList)
 
     reconcileChildDevices(inverterList)
     scheduleNextPoll(1)
+}
+
+private void logMbpollReference(List<Map> inverterList) {
+    Integer slave = (settings.unitId ?: DEFAULT_UNIT_ID) as Integer
+    Integer offset = parseIntegerSetting(settings.registerAddressOffset, DEFAULT_REGISTER_ADDRESS_OFFSET)
+    Integer functionCode = selectedReadFunctionCode()
+    String functionFlag = functionCode == 0x04 ? '-t 4' : ''
+    String baseFlag = offset == 0 ? '-0' : ''
+
+    inverterList.each { Map inv ->
+        String ip = inv.ip as String
+        String cmd = "mbpoll -m tcp ${baseFlag} -a ${slave} -r 30005 -c 2 ${functionFlag} ${ip}".replaceAll(/\s+/, ' ').trim()
+        log.info "Manual verify (${ip}): ${cmd}"
+    }
 }
 
 /**
