@@ -53,7 +53,6 @@ Examples:
   - For multi-device Modbus polling, key outstanding request state by a unique per-send `requestId` (store `txId` only as metadata), and resolve callbacks by `requestId` first to prevent cross-device txId collisions.
   - For multi-device Modbus polling, provide configurable inter-request and inter-inverter pacing (with conservative defaults) to avoid overdriving inverter TCP stacks and triggering repeated read timeouts.
   - When integrating third-party Modbus maps, make address base (`0`/`-1` offset) and read function (`03` holding vs `04` input) configurable; verify at least one known register with an external client (`mbpoll`) before release.
-  - If a setting must allow negative values in Hubitat app UI (e.g., Modbus register offset `-1`), avoid `type: 'number'` inputs that can block minus entry on some hubs; use enum/text plus explicit integer parsing.
   - Treat missing attributes/values as unknown; skip logic rather than guessing.
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:
