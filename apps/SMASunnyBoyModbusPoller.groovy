@@ -282,7 +282,15 @@ def pollSingleInverter(Map data = [:]) {
             defs: batch.defs.collect { [name: it.name, address: it.address, count: it.count, dataType: it.dataType, scale: it.scale, unit: it.unit, description: it.description] }
         ]
 
-        Map options = [destination: "${ip}:${port}", callback: 'parseResponse', requestId: txId]
+        Map options = [
+            type: hubitat.device.HubAction.Type.LAN_TYPE_CLIENT,
+            destinationAddress: ip,
+            destinationPort: "${port}",
+            encoding: hubitat.device.HubAction.Encoding.HEX_STRING,
+            ignoreResponse: false,
+            callback: 'parseResponse',
+            requestId: txId
+        ]
         if (traceLogging) {
             log.trace "TX ${txId} -> ${ip}:${port} start=${batch.start} qty=${batch.quantity} hex=${hexCmd}"
         }
