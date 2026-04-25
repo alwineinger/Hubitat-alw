@@ -64,6 +64,7 @@ Examples:
   - Use `runIn()` for delayed one-shot tasks.
   - Use `schedule()` for daily/cron-like work.
   - If using periodic schedules, keep them coarse (e.g., 15 minutes) and cheap.
+  - For manual fan ON handling, persist a single hold-until timestamp per fan using the same `Manual ON auto-OFF delay` value, and block **all** automation OFF paths (threshold, whole-house release, gate-triggered OFF, delayed checks) while that hold is active.
   - When an operating-state gate would force an automatic OFF, preserve manual **physical** fan ON events for a configurable grace window, persist hold-until timestamps by fan ID, and re-check the gate at grace expiry before sending `off()`.
 - Subscriptions:
   - Subscribe only to attributes you need.

@@ -10,7 +10,7 @@ import groovy.transform.Field
  *   - Generic attribute gates
  *   - Stale humidity detection + daily notification summary
  */
-def VERSION = "0.2.1"
+def VERSION = "0.2.2"
 
 @Field static final List<String> LOG_LEVELS = ["Off", "Info", "Debug", "Trace"]
 
@@ -62,7 +62,6 @@ def mainPage() {
             input "roomOnCombiner", "enum", title: "Room ON logic combiner", options: ROOM_ON_COMBINERS, defaultValue: "OR", required: true
             input "minimumOffMinutes", "number", title: "Minimum OFF cooldown before automation ON (minutes)", defaultValue: 15, required: true
             input "manualOnAutoOffMinutes", "number", title: "Manual ON auto-OFF delay (minutes)", defaultValue: 10, required: true
-            input "blockedManualFanGraceMinutes", "number", title: "Manual ON grace while operating-state is blocked (minutes)", defaultValue: 5, required: true
             input "physicalOnlyManualOn", "bool", title: "Treat ON as manual when physical/digital metadata is missing", defaultValue: true, required: true
             paragraph "Digital ON events are always ignored for manual auto-OFF. Physical ON events are always treated as manual. If enabled, ON events without physical/digital metadata are also treated as manual."
         }
@@ -287,7 +286,6 @@ Map getGlobalRoomThresholds() {
         roomOnCombiner: (roomOnCombiner ?: "OR"),
         minimumOffMs: minutesToMs(num(minimumOffMinutes, 15G)),
         manualOnAutoOffMs: minutesToMs(num(manualOnAutoOffMinutes, 10G)),
-        blockedManualFanGraceMs: minutesToMs(num(blockedManualFanGraceMinutes, 5G)),
         physicalOnlyManualOn: boolVal(physicalOnlyManualOn, true)
     ]
 }
