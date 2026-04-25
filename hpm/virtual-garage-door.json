@@ -1,0 +1,28 @@
+{
+  "packageName": "Virtual Garage Door",
+  "author": "Andrew W",
+  "version": "0.3.14",
+  "minimumHEVersion": "2.3.0",
+  "dateReleased": "2026-04-25",
+  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
+  "communityLink": "",
+  "apps": [
+    {
+      "id": "virtual-garage-door-app",
+      "name": "Virtual Garage Door",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/virtual_garage_door/app_virtual_garage_door.groovy",
+      "required": true
+    }
+  ],
+  "drivers": [
+    {
+      "id": "virtual-garage-door-driver",
+      "name": "Virtual Garage Door",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/virtual_garage_door/driver_virtual_garage_door.groovy",
+      "required": true
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "packageName": "HVAC Pause on Open Contacts",
+  "author": "Andrew W",
+  "version": "0.3.14",
+  "minimumHEVersion": "2.3.0",
+  "dateReleased": "2026-04-25",
+  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
+  "communityLink": "",
+  "apps": [
+    {
+      "id": "hvac-pause-on-open-contacts",
+      "name": "HVAC Pause on Open Contacts",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/app_hvac_pause_on_open_contacts.groovy",
+      "required": true
+    }
+  ]
+}

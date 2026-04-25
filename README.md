@@ -40,6 +40,30 @@ Production-ready Hubitat app set that recreates a webCoRE-style bathroom-fan deh
 - Automations that depend on unknown metrics are skipped safely.
 - Optional stale notifications are throttled to **max once per day** and sent at the configured daily time.
 
+
+## Hubitat Package Manager (HPM)
+
+This repo now includes HPM metadata under `hpm/`:
+- `hpm/packageList.json` (top-level package list URL you add to HPM)
+- One package manifest per app/driver bundle
+
+### Package list URL
+Use this raw URL in HPM:
+`https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/packageList.json`
+
+### HPM user flow
+1. In Hubitat, open **Hubitat Package Manager**.
+2. Choose **Add Package Manifest URL / Package List** (wording varies by HPM version).
+3. Paste your hosted `hpm/packageList.json` raw URL.
+4. Install desired package(s) from this repository.
+
+### Release workflow with HPM
+For each release:
+1. Update app/driver version(s) in code.
+2. Update the corresponding `hpm/*.json` `version`, `dateReleased`, and `releaseNotes`.
+3. Update `CHANGELOG.md`.
+4. Commit and publish.
+
 ## Troubleshooting
 - Set log level to **Debug** or **Trace** temporarily for diagnosis.
 - Verify selected devices actually emit `humidity` events.

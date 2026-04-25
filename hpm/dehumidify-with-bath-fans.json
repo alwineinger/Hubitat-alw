@@ -1,0 +1,26 @@
+{
+  "packageName": "Dehumidify With Bath Fans",
+  "author": "Andrew W",
+  "version": "0.3.14",
+  "minimumHEVersion": "2.3.0",
+  "dateReleased": "2026-04-25",
+  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
+  "communityLink": "",
+  "apps": [
+    {
+      "id": "dehumidify-parent",
+      "name": "Dehumidify With Bath Fans Parent",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/DehumidifyWithBathFansParent.groovy",
+      "required": true
+    },
+    {
+      "id": "dehumidify-room-child",
+      "name": "Dehumidify With Bath Fans Room Child",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/DehumidifyWithBathFansRoomChild.groovy",
+      "required": true
+    }
+  ]
+}

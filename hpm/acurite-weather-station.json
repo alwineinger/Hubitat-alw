@@ -1,0 +1,26 @@
+{
+  "packageName": "AcuRite Weather Station",
+  "author": "Andrew W",
+  "version": "0.3.14",
+  "minimumHEVersion": "2.3.0",
+  "dateReleased": "2026-04-25",
+  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
+  "communityLink": "",
+  "drivers": [
+    {
+      "id": "acurite-weather-parent-driver",
+      "name": "AcuRite Weather Parent",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/acurite/AcuRiteWeatherParent.groovy",
+      "required": true
+    },
+    {
+      "id": "acurite-indoor-child-driver",
+      "name": "AcuRite Indoor Child",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/acurite/AcuRiteIndoorChild.groovy",
+      "required": true
+    }
+  ]
+}
