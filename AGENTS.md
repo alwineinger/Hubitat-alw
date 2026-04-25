@@ -35,6 +35,9 @@ Examples:
   - Use top-level `definition(...)` in app files; do **not** wrap app definitions in `metadata {}` (that wrapper is for drivers and causes app compile metadata errors).
   - In every app `definition(...)`, set **non-empty** `iconUrl` and `iconX2Url` values; empty icon fields can cause Hubitat compile failures.
   - For parent/child app sets, verify icon fields are present in **every** app file before release (do not assume parent fixes cover children).
+  - Include Hubitat Package Manager (HPM) metadata in every new app, and backfill HPM metadata in any existing app that does not already declare it.
+- Driver metadata shape (Hubitat Drivers):
+  - Include Hubitat Package Manager (HPM) metadata in every new driver, and backfill HPM metadata in any existing driver that does not already declare it.
 - Use standard lifecycle methods:
   - `installed()`, `updated()`, `initialize()`
   - Call `unsubscribe()` and `unschedule()` in `updated()` before re-initializing.
@@ -119,7 +122,7 @@ There is no official unit test framework for Hubitat Groovy. Use a manual test c
 - Verify install/update path works without requiring re-creation of child apps.
 - Confirm defaults are safe (no accidental mass fan activation).
 - Confirm logging defaults to Info and is not noisy.
-- Optionally add Hubitat Package Manager (HPM) metadata if publishing.
+- Verify all new apps/drivers include Hubitat Package Manager (HPM) metadata and audit existing repo files to backfill missing HPM metadata before release.
 
 ## Pull request expectations
 - Include a short description of the behavior change.
