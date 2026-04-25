@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.4.0
+- Reorganized repository into package-scoped directories for consistency:
+  - Apps moved to `apps/<package-slug>/...`
+  - Drivers moved to `drivers/<package-slug>/...`
+  - Honeywell helper scripts moved to `tools/honeywell-security/`
+  - Legacy AcuRite reference file moved to `archive/originals/`
+- Updated all package manifests in `hpm/*.json` to point to new raw GitHub file locations.
+- Updated `README.md` with a repository-wide package/file map and maintenance guidance for path changes.
+- Updated `AGENTS.md` to enforce package-scoped repository organization for all future changes.
+
 ## v0.3.14
 - Updated all `hpm/*.json` manifests and `hpm/packageList.json` to use production GitHub URLs under `alwineinger/Hubitat-alw` (removed placeholder owner).
 - Bumped manifest package versions to `0.3.14` and updated release notes text to reflect URL hardening for HPM installs.

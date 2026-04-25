@@ -1,10 +1,10 @@
 {
   "packageName": "Sonoff Zigbee Temperature/Humidity Driver",
   "author": "Andrew W",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "minimumHEVersion": "2.3.0",
   "dateReleased": "2026-04-25",
-  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "releaseNotes": "Reorganized repository into package-scoped app/driver directories and updated manifest file locations.",
   "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
   "communityLink": "",
   "drivers": [
@@ -12,7 +12,7 @@
       "id": "sonoff-zigbee-temp-humidity-driver",
       "name": "Sonoff Zigbee Temperature/Humidity",
       "namespace": "alw",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/sonoffzigbeedriver.groovy",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/sonoff-zigbee-temp-humidity/SonoffZigbeeTempHumidity.groovy",
       "required": true
     }
   ]
