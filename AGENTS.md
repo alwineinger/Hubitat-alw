@@ -23,12 +23,22 @@ Examples:
 - A bug caused repeated `runIn()` scheduling → add a rule under Scheduling: “Always `unschedule(handlerName)` before re-scheduling and store scheduled flags keyed by deviceId.”
 - A bug mis-handled stale sensors → add a rule under Stale sensors: “Never use `device.currentValue()` unless the device is non-stale; compute metrics only from recent events.”
 
-## Repository structure (recommended)
-- `apps/` — Hubitat apps (parent/child)
-- `drivers/` — Hubitat drivers
-- `docs/` — optional design notes and screenshots
-- `README.md` — install/config steps + behavior summary
+## Repository structure (enforced)
+- `apps/<package-slug>/` — Hubitat app Groovy files for one package only
+- `drivers/<package-slug>/` — Hubitat driver Groovy files for one package only
+- `hpm/` — package manifests (`<package>.json`) + `packageList.json`
+- `tools/<package-slug>/` — non-Hubitat helper tools/scripts (proxies, local utilities)
+- `archive/` — legacy/reference files that are not install targets
+- `README.md` — package map + install pointers
 - `CHANGELOG.md` — human-readable version history
+
+### Repository organization rules (required)
+- Do **not** add new app or driver Groovy files at repo root.
+- Every new package must get a slug directory in `apps/` and/or `drivers/`.
+- Keep package slugs kebab-case and stable after first release.
+- HPM manifest `location` URLs must match the real repo paths exactly after any move/rename.
+- `README.md` package map must be updated in the same change when package file paths move.
+- If a file is legacy-only, move it under `archive/` instead of leaving it in active source folders.
 
 ## Coding standards (Hubitat Groovy)
 - App metadata shape (Hubitat Apps):

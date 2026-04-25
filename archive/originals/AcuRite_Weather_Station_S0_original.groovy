@@ -1,5 +1,5 @@
 /**
- * This legacy driver has been replaced by drivers/acurite/AcuRiteWeatherParent.groovy.
+ * This legacy driver has been replaced by drivers/acurite-weather-station/AcuRiteWeatherParent.groovy.
  *
  * The new implementation creates child devices for each indoor sensor and should
  * be used for all new installations. Keeping this stub in place allows existing

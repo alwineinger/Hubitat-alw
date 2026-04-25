@@ -1,10 +1,10 @@
 {
   "packageName": "SMA Sunny Boy Modbus Poller",
   "author": "Andrew W",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "minimumHEVersion": "2.3.0",
   "dateReleased": "2026-04-25",
-  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "releaseNotes": "Reorganized repository into package-scoped app/driver directories and updated manifest file locations.",
   "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
   "communityLink": "",
   "apps": [
@@ -12,7 +12,7 @@
       "id": "sma-sunny-boy-modbus-poller-app",
       "name": "SMA Sunny Boy Modbus Poller",
       "namespace": "alw",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/SMASunnyBoyModbusPoller.groovy",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/sma-sunny-boy-modbus-poller/SMASunnyBoyModbusPoller.groovy",
       "required": true
     }
   ],
@@ -21,7 +21,7 @@
       "id": "sma-sunny-boy-inverter-child-driver",
       "name": "SMA Sunny Boy Inverter Child",
       "namespace": "alw",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/SMASunnyBoyInverterChild.groovy",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/sma-sunny-boy-modbus-poller/SMASunnyBoyInverterChild.groovy",
       "required": true
     }
   ]
