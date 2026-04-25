@@ -3,7 +3,7 @@
  *
  *  One child per room.
  */
-def VERSION = "0.2.2"
+def VERSION = "0.2.3"
 
 definition(
     name: "Dehumidify With Bath Fans Room Child",
@@ -59,7 +59,7 @@ def updated() {
 def initialize() {
     if (!(state.lastAutoOnMsByFanId instanceof Map)) state.lastAutoOnMsByFanId = [:]
     if (!(state.lastAutoOffMsByFanId instanceof Map)) state.lastAutoOffMsByFanId = [:]
-    if (!(state.blockedHoldUntilMsByFanId instanceof Map)) state.blockedHoldUntilMsByFanId = [:]
+    if (!(state.manualHoldUntilMsByFanId instanceof Map)) state.manualHoldUntilMsByFanId = [:]
     if (state.roomHumidityHigh == null) state.roomHumidityHigh = false
 
     subscribe(roomHumiditySensors, "humidity", "humidityHandler")
@@ -208,7 +208,7 @@ private boolean cooldownAllows(Long minimumOffMs) {
     long minMs = minimumOffMs ?: msFromMinutes(15)
     long nowMs = now()
     getRoomOnTargetFans()?.every { fan ->
-        Long lastOff = state.lastAutoOffMsByFanId["${fan.id}"] as Long
+        Long lastOff = getLastAutoOffMap()["${fan.id}"] as Long
         if (!lastOff) return true
         return (nowMs - lastOff) >= minMs
     }
@@ -220,15 +220,15 @@ private void turnRoomOn(String reason) {
 
     targetFans?.each { fan ->
         safeSwitchOn(fan, reason)
-        state.lastAutoOnMsByFanId["${fan.id}"] = now()
+        getLastAutoOnMap()["${fan.id}"] = now()
     }
     nonTargetFans?.each { fan ->
-        if (isBlockedHoldActiveForFanId("${fan.id}")) {
-            parent.logDebug("${app.label}: keeping ${fan.displayName} ON during blocked-state grace window")
+        if (isManualHoldActiveForFanId("${fan.id}")) {
+            parent.logDebug("${app.label}: keeping ${fan.displayName} ON during manual ON hold window")
             return
         }
         safeSwitchOff(fan, "${reason}; non-selected room fan")
-        state.lastAutoOffMsByFanId["${fan.id}"] = now()
+        getLastAutoOffMap()["${fan.id}"] = now()
     }
     safeSwitchOn(roomIndicator, "room indicator")
     state.roomHumidityHigh = true
@@ -237,12 +237,12 @@ private void turnRoomOn(String reason) {
 
 private void turnRoomOff(String reason) {
     roomFans?.each { fan ->
-        if (isBlockedHoldActiveForFanId("${fan.id}")) {
-            parent.logDebug("${app.label}: skipping OFF for ${fan.displayName}; blocked-state grace still active")
+        if (isManualHoldActiveForFanId("${fan.id}")) {
+            parent.logDebug("${app.label}: skipping OFF for ${fan.displayName}; manual ON hold still active")
             return
         }
         safeSwitchOff(fan, reason)
-        state.lastAutoOffMsByFanId["${fan.id}"] = now()
+        getLastAutoOffMap()["${fan.id}"] = now()
     }
     safeSwitchOff(roomIndicator, "room indicator")
     state.roomHumidityHigh = false
@@ -254,7 +254,7 @@ private void handleFanTurnedOn(evt) {
     def dev = evt?.device
     if (!dev) return
 
-    Long lastAutoOn = state.lastAutoOnMsByFanId["${dev.id}"] as Long
+    Long lastAutoOn = getLastAutoOnMap()["${dev.id}"] as Long
     if (lastAutoOn && (now() - lastAutoOn) < msFromMinutes(2)) {
         return
     }
@@ -277,24 +277,15 @@ private void handleFanTurnedOn(evt) {
         return
     }
 
+    long holdUntil = now() + ((global.manualOnAutoOffMs ?: msFromMinutes(10)) as Long)
+    getManualHoldMap()["${dev.id}"] = holdUntil
     if (parent.isOpStateBlockedForOn()) {
-        long holdUntil = now() + ((global.blockedManualFanGraceMs ?: msFromMinutes(5)) as Long)
-        state.blockedHoldUntilMsByFanId["${dev.id}"] = holdUntil
-        scheduleBlockedStateGraceCheck("${dev.id}", holdUntil)
         parent.logInfo("${app.label}: manual ON hold active for ${dev.displayName} while operating-state blocks automation")
     }
 
     Integer delay = Math.max(30, ((global.manualOnAutoOffMs as Long) / 1000L) as Integer)
     runIn(delay, "manualAutoOffCheck", [overwrite: true, data: [fanId: "${dev.id}"]])
     parent.logDebug("${app.label}: scheduled manual auto-off for ${dev.displayName} in ${delay}s")
-}
-
-private void scheduleBlockedStateGraceCheck(String fanId, Long holdUntilMs) {
-    if (!fanId || !holdUntilMs) return
-    long remainingMs = holdUntilMs - now()
-    if (remainingMs <= 0L) remainingMs = 1000L
-    Integer delaySeconds = Math.max(1, (remainingMs / 1000L).intValue())
-    runIn(delaySeconds, "blockedStateGraceOffCheck", [overwrite: false, data: [fanId: fanId]])
 }
 
 def manualAutoOffCheck(data) {
@@ -305,84 +296,60 @@ def manualAutoOffCheck(data) {
 
     if (parent.isHouseDehumActive() || state.roomHumidityHigh == true) return
 
-    Long lastAutoOn = state.lastAutoOnMsByFanId["${fan.id}"] as Long
+    Long lastAutoOn = getLastAutoOnMap()["${fan.id}"] as Long
     if (lastAutoOn && (now() - lastAutoOn) < msFromMinutes(2)) return
+
+    Long holdUntilMs = getManualHoldMap()[fanId] as Long
+    if (holdUntilMs && now() < holdUntilMs) {
+        Integer remainingSeconds = Math.max(1, ((holdUntilMs - now()) / 1000L) as Integer)
+        runIn(remainingSeconds, "manualAutoOffCheck", [overwrite: true, data: [fanId: fanId]])
+        return
+    }
+    if (holdUntilMs) {
+        getManualHoldMap().remove(fanId)
+    }
 
     def sw = fan.currentValue("switch")?.toString()?.toLowerCase()
     if (sw == "on") {
         safeSwitchOff(fan, "manual auto-off")
-        state.lastAutoOffMsByFanId["${fan.id}"] = now()
+        getLastAutoOffMap()["${fan.id}"] = now()
         parent.logInfo("${app.label}: manual ON auto-off executed for ${fan.displayName}")
     }
 }
 
-def blockedStateGraceOffCheck(data) {
-    String fanId = data?.fanId?.toString()
-    if (!fanId) return
-    def fan = roomFans?.find { "${it.id}" == fanId }
-    if (!fan) return
-
-    Long holdUntilMs = state.blockedHoldUntilMsByFanId[fanId] as Long
-    if (!holdUntilMs) return
-    long nowMs = now()
-    if (nowMs < holdUntilMs) {
-        scheduleBlockedStateGraceCheck(fanId, holdUntilMs)
-        return
-    }
-
-    state.blockedHoldUntilMsByFanId.remove(fanId)
-
-    def sw = fan.currentValue("switch")?.toString()?.toLowerCase()
-    if (sw != "on") return
-    if (isAutomationDemandingOnNow()) return
-    if (!parent.isOpStateBlockedForOn()) return
-
-    safeSwitchOff(fan, "blocked-state grace expired")
-    state.lastAutoOffMsByFanId[fanId] = nowMs
-    parent.logInfo("${app.label}: blocked-state grace expired; OFF -> ${fan.displayName}")
-}
-
 def handleWholeHouseDeactivated(String reason) {
     getWholeHouseActiveFans()?.each { fan ->
-        if (isBlockedHoldActiveForFanId("${fan.id}")) {
-            parent.logDebug("${app.label}: skipping whole-house OFF for ${fan.displayName}; blocked-state grace still active")
+        if (isManualHoldActiveForFanId("${fan.id}")) {
+            parent.logDebug("${app.label}: skipping whole-house OFF for ${fan.displayName}; manual ON hold still active")
             return
         }
         safeSwitchOff(fan, "whole-house deactivated (${reason})")
-        state.lastAutoOffMsByFanId["${fan.id}"] = now()
+        getLastAutoOffMap()["${fan.id}"] = now()
     }
 }
 
-boolean isBlockedHoldActiveForFanId(String fanId) {
+boolean isManualHoldActiveForFanId(String fanId) {
     if (!fanId) return false
-    Long holdUntilMs = state.blockedHoldUntilMsByFanId[fanId] as Long
+    Long holdUntilMs = getManualHoldMap()[fanId] as Long
     if (!holdUntilMs) return false
     if (now() < holdUntilMs) return true
-    state.blockedHoldUntilMsByFanId.remove(fanId)
+    getManualHoldMap().remove(fanId)
     return false
 }
 
-private boolean isAutomationDemandingOnNow() {
-    if (parent.isHouseDehumActive()) return true
-    def global = parent.getGlobalRoomThresholds()
-    def roomMetric = computeRoomHumidityMetric()
-    BigDecimal roomHum = roomMetric.value
-    if (roomHum == null) return false
+private Map getManualHoldMap() {
+    if (!(state.manualHoldUntilMsByFanId instanceof Map)) state.manualHoldUntilMsByFanId = [:]
+    return state.manualHoldUntilMsByFanId as Map
+}
 
-    BigDecimal insideRoomHum = parent.getInsideHumForRooms()
-    BigDecimal outsideHum = boolVal(global.enableRoomRelOutside) ? parent.getOutsideHum() : null
+private Map getLastAutoOnMap() {
+    if (!(state.lastAutoOnMsByFanId instanceof Map)) state.lastAutoOnMsByFanId = [:]
+    return state.lastAutoOnMsByFanId as Map
+}
 
-    boolean absOn = roomHum >= n(global.roomAbsOn)
-    boolean relInsideEnabledOn = (insideRoomHum != null)
-    boolean relInsideOn = relInsideEnabledOn ? roomHum >= (insideRoomHum + n(global.roomRelInsideOnDelta)) : false
-    boolean relOutsideEnabled = boolVal(global.enableRoomRelOutside) && outsideHum != null && global.roomRelOutsideOnDelta != null
-    boolean relOutsideOn = relOutsideEnabled ? roomHum >= (outsideHum + n(global.roomRelOutsideOnDelta)) : false
-    boolean anyRelOn = relInsideOn || relOutsideOn
-
-    if ((global.roomOnCombiner ?: "OR") == "AND") {
-        return absOn && anyRelOn
-    }
-    return absOn || anyRelOn
+private Map getLastAutoOffMap() {
+    if (!(state.lastAutoOffMsByFanId instanceof Map)) state.lastAutoOffMsByFanId = [:]
+    return state.lastAutoOffMsByFanId as Map
 }
 
 private String classifyOnEvent(evt) {

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.12
+- Fixed Dehumidify With Bath Fans manual-ON hold behavior so **all** automatic OFF paths now respect the active manual hold window (including room threshold OFF and whole-house release OFF paths).
+- Unified manual hold timing to one setting in Parent app: `Manual ON auto-OFF delay`; removed the separate blocked-operating-state grace setting.
+- Hardened Room Child state-map access for per-fan hold/cooldown bookkeeping to avoid null-map property errors during evaluation.
+- Added a bug-prevention rule to `AGENTS.md`: use one per-fan manual hold window and enforce it consistently across every automation OFF path.
+
 ## v0.3.11
 - Updated SMA Sunny Boy Modbus Poller startup behavior to use a serial-number-only connectivity probe for inverters that have not yet returned any successful Modbus response.
 - This reduces repeated timeout bursts while validating first contact and automatically returns to the configured register set after the first successful response.
