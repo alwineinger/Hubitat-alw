@@ -1,0 +1,40 @@
+{
+  "packages": [
+    {
+      "name": "Dehumidify With Bath Fans",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/dehumidify-with-bath-fans.json"
+    },
+    {
+      "name": "Garage Fridge Freezer Open Notifier",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/garage-fridge-freezer-open-notifier.json"
+    },
+    {
+      "name": "SMA Sunny Boy Modbus Poller",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/sma-sunny-boy-modbus-poller.json"
+    },
+    {
+      "name": "Virtual Garage Door",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/virtual-garage-door.json"
+    },
+    {
+      "name": "HVAC Pause on Open Contacts",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/hvac-pause-on-open-contacts.json"
+    },
+    {
+      "name": "Honeywell Security Integration",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/honeywell-security-integration.json"
+    },
+    {
+      "name": "Sonoff Zigbee Temperature/Humidity Driver",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/sonoff-zigbee-temp-humidity-driver.json"
+    },
+    {
+      "name": "AcuRite Weather Station",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/acurite-weather-station.json"
+    },
+    {
+      "name": "First Alert Smoke/Carbon Detector Driver",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/first-alert-smoke-carbon-driver.json"
+    }
+  ]
+}

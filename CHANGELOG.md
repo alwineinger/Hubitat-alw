@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.3.14
+- Updated all `hpm/*.json` manifests and `hpm/packageList.json` to use production GitHub URLs under `alwineinger/Hubitat-alw` (removed placeholder owner).
+- Bumped manifest package versions to `0.3.14` and updated release notes text to reflect URL hardening for HPM installs.
+
+## v0.3.13
+- Added Hubitat Package Manager support files under `hpm/`:
+  - `packageList.json` for repository package discovery
+  - Individual package manifests for each app/driver bundle in this repo
+- Updated `README.md` with HPM setup instructions and release-maintenance workflow details.
+
 ## v0.3.12
 - Fixed Dehumidify With Bath Fans manual-ON hold behavior so **all** automatic OFF paths now respect the active manual hold window (including room threshold OFF and whole-house release OFF paths).
 - Unified manual hold timing to one setting in Parent app: `Manual ON auto-OFF delay`; removed the separate blocked-operating-state grace setting.

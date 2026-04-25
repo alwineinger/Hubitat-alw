@@ -1,0 +1,19 @@
+{
+  "packageName": "First Alert Smoke/Carbon Detector Driver",
+  "author": "Andrew W",
+  "version": "0.3.14",
+  "minimumHEVersion": "2.3.0",
+  "dateReleased": "2026-04-25",
+  "releaseNotes": "Set production GitHub raw/documentation URLs for Hubitat Package Manager manifests.",
+  "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
+  "communityLink": "",
+  "drivers": [
+    {
+      "id": "first-alert-smoke-carbon-driver",
+      "name": "First Alert Smoke Carbon Detector",
+      "namespace": "alw",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/First_Alert_Smoke_Carbon_Detector.groovy",
+      "required": true
+    }
+  ]
+}
