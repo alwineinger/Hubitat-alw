@@ -11,18 +11,30 @@
     {
       "id": "sma-sunny-boy-modbus-poller-app",
       "name": "SMA Sunny Boy Modbus Poller",
-      "namespace": "alw",
+      "namespace": "Hubitat-alw",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/sma-sunny-boy-modbus-poller/SMASunnyBoyModbusPoller.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "SMA Sunny Boy Modbus Poller",
+          "namespace": "alw"
+        }
+      ]
     }
   ],
   "drivers": [
     {
       "id": "sma-sunny-boy-inverter-child-driver",
       "name": "SMA Sunny Boy Inverter Child",
-      "namespace": "alw",
+      "namespace": "Hubitat-alw",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/sma-sunny-boy-modbus-poller/SMASunnyBoyInverterChild.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "SMA Sunny Boy Inverter Child",
+          "namespace": "alw"
+        }
+      ]
     }
   ]
 }

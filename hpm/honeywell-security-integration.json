@@ -11,32 +11,56 @@
     {
       "id": "honeywell-security-app",
       "name": "Honeywell Security",
-      "namespace": "alw",
+      "namespace": "brianwilson-hubitat",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/honeywell-security/HoneywellSecurity.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Honeywell Security",
+          "namespace": "alw"
+        }
+      ]
     }
   ],
   "drivers": [
     {
       "id": "honeywell-partition-driver",
       "name": "Honeywell Partition",
-      "namespace": "alw",
+      "namespace": "brianwilson-hubitat",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/honeywell-security/HoneywellPartition.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Honeywell Partition",
+          "namespace": "alw"
+        }
+      ]
     },
     {
       "id": "honeywell-zone-contact-driver",
       "name": "Honeywell Zone Contact",
-      "namespace": "alw",
+      "namespace": "brianwilson-hubitat",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/honeywell-security/HoneywellZoneContact.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Honeywell Zone Contact",
+          "namespace": "alw"
+        }
+      ]
     },
     {
       "id": "honeywell-zone-motion-driver",
       "name": "Honeywell Zone Motion",
-      "namespace": "alw",
+      "namespace": "brianwilson-hubitat",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/honeywell-security/HoneywellZoneMotion.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Honeywell Zone Motion",
+          "namespace": "alw"
+        }
+      ]
     }
   ]
 }

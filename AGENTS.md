@@ -37,6 +37,7 @@ Examples:
 - Every new package must get a slug directory in `apps/` and/or `drivers/`.
 - Keep package slugs kebab-case and stable after first release.
 - HPM manifest `location` URLs must match the real repo paths exactly after any move/rename.
+- For every HPM manifest `apps[]` / `drivers[]` / `bundles[]` item, keep `name` and `namespace` exactly equal to the referenced Groovy `definition(...)` metadata; if a previous manifest value was wrong but already shipped, preserve it under `alternateNames`.
 - `README.md` package map must be updated in the same change when package file paths move.
 - If a file is legacy-only, move it under `archive/` instead of leaving it in active source folders.
 

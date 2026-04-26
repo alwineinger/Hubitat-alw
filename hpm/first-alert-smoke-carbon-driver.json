@@ -10,10 +10,16 @@
   "drivers": [
     {
       "id": "first-alert-smoke-carbon-driver",
-      "name": "First Alert Smoke Carbon Detector",
-      "namespace": "alw",
+      "name": "First Alert Smoke/Carbon Detector",
+      "namespace": "Hubitat",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/first-alert-smoke-carbon/FirstAlertSmokeCarbonDetector.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "First Alert Smoke Carbon Detector",
+          "namespace": "alw"
+        }
+      ]
     }
   ]
 }
