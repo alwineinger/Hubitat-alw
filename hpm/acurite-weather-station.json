@@ -10,17 +10,29 @@
   "drivers": [
     {
       "id": "acurite-weather-parent-driver",
-      "name": "AcuRite Weather Parent",
-      "namespace": "alw",
+      "name": "AcuRite Sensor Parent",
+      "namespace": "alwineinger",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/acurite-weather-station/AcuRiteWeatherParent.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "AcuRite Weather Parent",
+          "namespace": "alw"
+        }
+      ]
     },
     {
       "id": "acurite-indoor-child-driver",
-      "name": "AcuRite Indoor Child",
-      "namespace": "alw",
+      "name": "AcuRite Indoor Sensor",
+      "namespace": "alwineinger",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/acurite-weather-station/AcuRiteIndoorChild.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "AcuRite Indoor Child",
+          "namespace": "alw"
+        }
+      ]
     }
   ]
 }

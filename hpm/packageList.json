@@ -1,40 +1,106 @@
 {
+  "author": "Andrew Wineinger",
+  "gitHubUrl": "https://github.com/alwineinger/Hubitat-alw",
+  "payPalUrl": "",
   "packages": [
     {
       "name": "Dehumidify With Bath Fans",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/dehumidify-with-bath-fans.json"
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/dehumidify-with-bath-fans.json",
+      "description": "Parent/child humidity automation that controls bath fans with room thresholds, gates, and whole-house logic.",
+      "tags": [
+        "bath-fans",
+        "humidity",
+        "automation"
+      ]
     },
     {
       "name": "Garage Fridge Freezer Open Notifier",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/garage-fridge-freezer-open-notifier.json"
+      "category": "Notifications",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/garage-fridge-freezer-open-notifier.json",
+      "description": "Monitors garage fridge/freezer contact sensors and sends notifications when doors remain open past configured delays.",
+      "tags": [
+        "garage",
+        "fridge",
+        "notifications"
+      ]
     },
     {
       "name": "SMA Sunny Boy Modbus Poller",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/sma-sunny-boy-modbus-poller.json"
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/sma-sunny-boy-modbus-poller.json",
+      "description": "Modbus/TCP poller app with child driver telemetry for SMA Sunny Boy inverters.",
+      "tags": [
+        "solar",
+        "modbus",
+        "energy"
+      ]
     },
     {
       "name": "Virtual Garage Door",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/virtual-garage-door.json"
+      "category": "Convenience",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/virtual-garage-door.json",
+      "description": "Virtual garage door app and driver pair for syncing a virtual opener with real contact/switch devices.",
+      "tags": [
+        "garage-door",
+        "virtual-device",
+        "automation"
+      ]
     },
     {
       "name": "HVAC Pause on Open Contacts",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/hvac-pause-on-open-contacts.json"
+      "category": "Utility",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/hvac-pause-on-open-contacts.json",
+      "description": "Temporarily pauses thermostat operation when configured doors/windows are open and restores when closed.",
+      "tags": [
+        "hvac",
+        "contacts",
+        "energy-savings"
+      ]
     },
     {
       "name": "Honeywell Security Integration",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/honeywell-security-integration.json"
+      "category": "Security",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/honeywell-security-integration.json",
+      "description": "Integrates Honeywell/Envisalink alarm partitions and zones into Hubitat via app and zone/partition drivers.",
+      "tags": [
+        "alarm",
+        "honeywell",
+        "envisalink"
+      ]
     },
     {
       "name": "Sonoff Zigbee Temperature/Humidity Driver",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/sonoff-zigbee-temp-humidity-driver.json"
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/sonoff-zigbee-temp-humidity-driver.json",
+      "description": "Custom Zigbee driver for Sonoff temperature/humidity sensors with reporting and offset preferences.",
+      "tags": [
+        "zigbee",
+        "temperature",
+        "humidity"
+      ]
     },
     {
       "name": "AcuRite Weather Station",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/acurite-weather-station.json"
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/acurite-weather-station.json",
+      "description": "LAN weather station parent/child drivers for AcuRite sensors and local telemetry ingestion.",
+      "tags": [
+        "weather",
+        "acurite",
+        "lan"
+      ]
     },
     {
       "name": "First Alert Smoke/Carbon Detector Driver",
-      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/first-alert-smoke-carbon-driver.json"
+      "category": "Security",
+      "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/hpm/first-alert-smoke-carbon-driver.json",
+      "description": "Z-Wave driver for First Alert smoke and carbon monoxide detector devices.",
+      "tags": [
+        "smoke",
+        "carbon-monoxide",
+        "zwave"
+      ]
     }
   ]
 }

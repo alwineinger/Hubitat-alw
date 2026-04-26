@@ -10,19 +10,31 @@
   "apps": [
     {
       "id": "virtual-garage-door-app",
-      "name": "Virtual Garage Door",
-      "namespace": "alw",
+      "name": "LGK Virtual Garage Door",
+      "namespace": "lgkapps",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/virtual-garage-door/VirtualGarageDoorApp.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Virtual Garage Door",
+          "namespace": "alw"
+        }
+      ]
     }
   ],
   "drivers": [
     {
       "id": "virtual-garage-door-driver",
-      "name": "Virtual Garage Door",
-      "namespace": "alw",
+      "name": "Simulated Garage Door Opener V2",
+      "namespace": "smartthings/testing",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/virtual-garage-door/VirtualGarageDoorDriver.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Virtual Garage Door",
+          "namespace": "alw"
+        }
+      ]
     }
   ]
 }

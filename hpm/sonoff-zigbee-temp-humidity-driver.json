@@ -10,10 +10,16 @@
   "drivers": [
     {
       "id": "sonoff-zigbee-temp-humidity-driver",
-      "name": "Sonoff Zigbee Temperature/Humidity",
-      "namespace": "alw",
+      "name": "Sonoff SNZB-02P Driver",
+      "namespace": "Bithome",
       "location": "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/drivers/sonoff-zigbee-temp-humidity/SonoffZigbeeTempHumidity.groovy",
-      "required": true
+      "required": true,
+      "alternateNames": [
+        {
+          "name": "Sonoff Zigbee Temperature/Humidity",
+          "namespace": "alw"
+        }
+      ]
     }
   ]
 }
