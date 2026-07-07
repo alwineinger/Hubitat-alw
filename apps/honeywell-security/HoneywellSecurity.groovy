@@ -12,9 +12,37 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  * 
- *  Version: 1.0.1
+ *  Version: 1.0.2
  */
 import groovy.json.JsonSlurper
+import groovy.transform.Field
+
+@Field static final Map HSM_HOME_NIGHT_ACTION_OPTIONS = [
+  armStay: "Arm Stay",
+  armInstant: "Arm Instant",
+  none: "Do Nothing"
+]
+@Field static final Map HSM_AWAY_ACTION_OPTIONS = [
+  armAway: "Arm Away",
+  none: "Do Nothing"
+]
+@Field static final Map HSM_DISARMED_ACTION_OPTIONS = [
+  disarm: "Disarm",
+  none: "Do Nothing"
+]
+@Field static final Map PANEL_STAY_ACTION_OPTIONS = [
+  armHome: "Arm Home",
+  armNight: "Arm Night",
+  none: "Do Nothing"
+]
+@Field static final Map PANEL_AWAY_ACTION_OPTIONS = [
+  armAway: "Arm Away",
+  none: "Do Nothing"
+]
+@Field static final Map PANEL_READY_ACTION_OPTIONS = [
+  disarm: "Disarm",
+  none: "Do Nothing"
+]
 
 definition(
   name: "Honeywell Security",
@@ -61,6 +89,21 @@ def page1() {
 
     section("Hubitat Safety Monitor") {
       input "enableHSM", "bool", title: "Integrate with Hubitat Safety Monitor", required: true, defaultValue: true
+    }
+    section("HSM to Honeywell command mapping") {
+      paragraph "Choose which Honeywell command is sent when Hubitat Safety Monitor changes state. Defaults preserve the original integration behavior."
+      input "hsmArmedHomeAction", "enum", title: "When HSM is Armed Home", required: true, defaultValue: "armStay", options: HSM_HOME_NIGHT_ACTION_OPTIONS
+      input "hsmArmedNightAction", "enum", title: "When HSM is Armed Night", required: true, defaultValue: "armStay", options: HSM_HOME_NIGHT_ACTION_OPTIONS
+      input "hsmArmedAwayAction", "enum", title: "When HSM is Armed Away", required: true, defaultValue: "armAway", options: HSM_AWAY_ACTION_OPTIONS
+      input "hsmDisarmedAction", "enum", title: "When HSM is Disarmed", required: true, defaultValue: "disarm", options: HSM_DISARMED_ACTION_OPTIONS
+    }
+    section("Advanced: Honeywell to HSM status mapping") {
+      paragraph "Choose which HSM state is requested when the Honeywell partition reports a final state. Defaults preserve the original integration behavior."
+      input "panelArmedStayHsmAction", "enum", title: "When Honeywell reports Armed Stay", required: true, defaultValue: "armHome", options: PANEL_STAY_ACTION_OPTIONS
+      input "panelArmedInstantHsmAction", "enum", title: "When Honeywell reports Armed Instant", required: true, defaultValue: "armHome", options: PANEL_STAY_ACTION_OPTIONS
+      input "panelArmedAwayHsmAction", "enum", title: "When Honeywell reports Armed Away", required: true, defaultValue: "armAway", options: PANEL_AWAY_ACTION_OPTIONS
+      input "panelArmedMaxHsmAction", "enum", title: "When Honeywell reports Armed Max", required: true, defaultValue: "armAway", options: PANEL_AWAY_ACTION_OPTIONS
+      input "panelReadyHsmAction", "enum", title: "When Honeywell reports Ready", required: true, defaultValue: "disarm", options: PANEL_READY_ACTION_OPTIONS
     }
     section("") {
        input "isDebug", "bool", title: "Enable Debug Logging", required: false, multiple: false, defaultValue: false, submitOnChange: true
@@ -265,40 +308,64 @@ def alarmHandler(evt) {
 
   ifDebug("Received HSM event: Value: ${evt.value} state.alarmSystemStatus: ${state.alarmSystemStatus}")
   state.alarmSystemStatus = evt.value
-  if (evt.value == "armedHome") {
-    sendCommandPlugin('/armStay')
+  def action = getHsmToHoneywellAction(evt.value)
+  def commandPath = getHoneywellCommandPath(action)
+  if (!commandPath) {
+    ifDebug("No Honeywell command mapped for HSM status ${evt.value} (action: ${action})")
+    return
   }
-  if (evt.value == "armedNight") {
-    sendCommandPlugin('/armStay')
-  }
-  if (evt.value == "armedAway") {
-    sendCommandPlugin('/armAway')
-  }
-  if (evt.value == "disarmed") {
-    sendCommandPlugin('/disarm')
-  }
+  ifDebug("Sending Honeywell command ${commandPath} for HSM status ${evt.value}")
+  sendCommandPlugin(commandPath)
 }
 
 private updateAlarmSystemStatus(partitionstatus,alpha) {
-  if (!settings.enableHSM || partitionstatus == "arming" || alpha.contains("May Exit")) {
+  if (!settings.enableHSM || partitionstatus == "arming" || alpha?.contains("May Exit")) {
     return
   }
 
   def lastAlarmSystemStatus = state.alarmSystemStatus
-  if (partitionstatus == "armedstay" || partitionstatus == "armedinstant") {
-    state.alarmSystemStatus = "armHome"
+  def hsmAction = getPanelToHsmAction(partitionstatus)
+  if (!hsmAction || hsmAction == "none") {
+    ifDebug("No HSM action mapped for Honeywell partition status ${partitionstatus}")
+    return
   }
-  if (partitionstatus == "armedaway" || partitionstatus == "armedmax") {
-    state.alarmSystemStatus = "armAway"
-  }
-  if (partitionstatus == "ready") {
-    state.alarmSystemStatus = "disarm"
-  }
+  state.alarmSystemStatus = hsmAction
 
   if (lastAlarmSystemStatus != state.alarmSystemStatus) {
 	ifDebug("Sending HSM Event to hsmSetArm: ${state.alarmSystemStatus} (partition status: ${partitionstatus})")
     sendLocationEvent(name: "hsmSetArm", value: state.alarmSystemStatus)
   }
+}
+
+private getHsmToHoneywellAction(hsmStatus) {
+  def mappings = [
+    armedHome: settings.hsmArmedHomeAction ?: "armStay",
+    armedNight: settings.hsmArmedNightAction ?: "armStay",
+    armedAway: settings.hsmArmedAwayAction ?: "armAway",
+    disarmed: settings.hsmDisarmedAction ?: "disarm"
+  ]
+  return mappings[hsmStatus]
+}
+
+private getHoneywellCommandPath(action) {
+  def commandPaths = [
+    armStay: "/armStay",
+    armInstant: "/armInstant",
+    armAway: "/armAway",
+    disarm: "/disarm"
+  ]
+  return commandPaths[action]
+}
+
+private getPanelToHsmAction(partitionstatus) {
+  def mappings = [
+    armedstay: settings.panelArmedStayHsmAction ?: "armHome",
+    armedinstant: settings.panelArmedInstantHsmAction ?: "armHome",
+    armedaway: settings.panelArmedAwayHsmAction ?: "armAway",
+    armedmax: settings.panelArmedMaxHsmAction ?: "armAway",
+    ready: settings.panelReadyHsmAction ?: "disarm"
+  ]
+  return mappings[partitionstatus]
 }
 
 private getProxyAddress() {

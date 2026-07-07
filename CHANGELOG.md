@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.1
+- Added safe configurable Hubitat Safety Monitor to Honeywell command mappings, including support for mapping HSM Armed Night to Honeywell Arm Instant.
+- Added advanced Honeywell partition state to HSM status mappings so panel-reported states can be synchronized explicitly while preserving existing defaults.
+- Updated the Honeywell Security HPM manifest release metadata for the new HSM mapping settings.
+
 ## v0.4.0
 - Reorganized repository into package-scoped directories for consistency:
   - Apps moved to `apps/<package-slug>/...`

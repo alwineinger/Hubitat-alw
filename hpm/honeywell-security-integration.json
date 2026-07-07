@@ -1,10 +1,10 @@
 {
   "packageName": "Honeywell Security Integration",
   "author": "Andrew W",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "minimumHEVersion": "2.3.0",
-  "dateReleased": "2026-04-25",
-  "releaseNotes": "Reorganized repository into package-scoped app/driver directories and updated manifest file locations.",
+  "dateReleased": "2026-07-07",
+  "releaseNotes": "Adds safe configurable Hubitat Safety Monitor to Honeywell command mappings and advanced Honeywell partition state to HSM status mappings.",
   "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
   "communityLink": "",
   "apps": [
