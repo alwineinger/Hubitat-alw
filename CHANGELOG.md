@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.5.0 — 2026-08-24
+- Fixed Virtual Garage Door HomeKit state synchronization by using canonical `door` events so Apple Home receives final state updates reliably.
+- Made physical sensor feedback authoritative for final open/closed states instead of relying on a virtual travel timer.
+- Hardened opener relay and close-warning blink behavior, including cancellation of stale delayed actions and restoration of the warning light state.
+- Preserved the existing HPM package identity and app/driver metadata so installed configurations update in place without recreating the virtual device.
+
 ## v0.4.0
 - Reorganized repository into package-scoped directories for consistency:
   - Apps moved to `apps/<package-slug>/...`

@@ -1,10 +1,10 @@
 {
   "packageName": "Virtual Garage Door",
   "author": "Andrew W",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "minimumHEVersion": "2.3.0",
-  "dateReleased": "2026-04-25",
-  "releaseNotes": "Reorganized repository into package-scoped app/driver directories and updated manifest file locations.",
+  "dateReleased": "2026-08-24",
+  "releaseNotes": "Synchronizes HomeKit door state through canonical door events, uses physical sensor feedback for final states, and hardens relay/blink safety while preserving in-place app and driver compatibility.",
   "documentationLink": "https://github.com/alwineinger/Hubitat-alw/blob/main/README.md",
   "communityLink": "",
   "apps": [

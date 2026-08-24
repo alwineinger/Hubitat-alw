@@ -73,6 +73,13 @@ Examples:
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:
   - Only call `device.on()` if switch is currently off; only call `off()` if on.
+- Garage-door/HomeKit state:
+  - For `GarageDoorControl` and HomeKit, publish only the standard `door` attribute; do not create parallel or nonstandard garage-door state events.
+  - Treat physical sensor feedback as the sole authority for terminal `open`/`closed` states; virtual commands may report only `opening`/`closing` until feedback arrives.
+  - Subscribe garage-door apps to `door` command transitions; do not use a contact attribute as a command channel.
+  - Tokenize delayed close checks and blink callbacks, and cancel them whenever a terminal sensor event or superseding request occurs.
+  - Capture and restore the warning light's prior state after a blink sequence; never assume it began off.
+  - Check the opener relay's current state before pulsing it, and make duplicate open/close requests idempotent.
 - Manual ON classification: classify fan ON events as `physical`, `digital`, or `unknown` using both `evt.type` and `evt.isPhysical()` when available; treat `digital` as non-manual and make `unknown` behavior explicitly configurable in Parent settings/help text.
 - Scheduling best practices:
   - Use `runIn()` for delayed one-shot tasks.

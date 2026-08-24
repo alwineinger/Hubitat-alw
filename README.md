@@ -38,6 +38,26 @@ This repository contains Hubitat Elevation Apps and Drivers, organized by packag
 - App: `apps/virtual-garage-door/VirtualGarageDoorApp.groovy`
 - Driver: `drivers/virtual-garage-door/VirtualGarageDoorDriver.groovy`
 
+#### Virtual Garage Door setup and HomeKit rollout
+
+Prerequisites and setup:
+
+- Create one virtual garage-door device with the existing `Simulated Garage Door Opener V2` driver, then select that same device in the Virtual Garage Door app.
+- Select one momentary opener relay. The default `Opener switch auto-resets` setting is true. If the relay stays on, disable auto-reset and use the app-managed bounded pulse duration (default 500 ms).
+- Select one acceleration/contact sensor: `closed` must prove the door is fully shut; `open` means the door is not fully closed.
+
+For a HomeKit rollout, back up the hub first and update to Hubitat stable 2.5.1.152 or later. The hub used before this rollout was on 2.5.0.159. Install the app and driver update in place, then restart Hubitat's HomeKit Integration and verify the accessory is exported as the Garage Door class. If HomeKit has cached the old class or state, deselect the accessory, save, wait 30 seconds, then reselect it. A routine HomeKit bridge factory reset is not required.
+
+With one sensor, this package cannot report precise mid-travel position, movement direction, or obstruction state. A partially open or stopped door is conservatively represented as open because it is not fully closed.
+
+Hubitat-native manual verification checklist:
+
+1. From Hubitat and Apple Home, complete at least ten open/close cycles; include backgrounding and reopening Apple Home without force-quitting it. Confirm the virtual device reaches the sensor-confirmed final `open` or `closed` state without remaining in `opening` or `closing`.
+2. Operate the door with its wall control or remote; confirm the physical sensor updates the virtual device without pulsing the opener relay.
+3. Restart HomeKit Integration, reopen Apple Home, and verify the Garage Door class and current state; if cached, use deselect, wait, and reselect.
+4. Simulate a blocked close and a failed open; confirm timeout recovery reports the sensor-backed state and does not leave a stale transition.
+5. Enable close-warning blinking, then cancel or complete the close; confirm the warning light returns to its prior state and no stale callback pulses the relay.
+
 ### Sonoff Zigbee Temperature/Humidity Driver
 - Driver: `drivers/sonoff-zigbee-temp-humidity/SonoffZigbeeTempHumidity.groovy`
 
