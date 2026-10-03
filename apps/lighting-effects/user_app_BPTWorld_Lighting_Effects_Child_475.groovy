@@ -39,6 +39,7 @@
  *
  * Changes:
  *
+ *  2.0.7 - 10/03/26 - Allow slow color changes every 1 to 180 minutes
  *  2.0.6 - 10/03/26 - Send one color command per selected bulb per cycle
  *  2.0.5 - 11/08/20 - Adjustments
  *  2.0.4 - 08/28/20 - Added App Control options
@@ -57,7 +58,7 @@ import java.text.SimpleDateFormat
 
 def setVersion(){
     state.name = "Lighting Effects"
-	state.version = "2.0.6"
+	state.version = "2.0.7"
 }
 
 definition(
@@ -88,7 +89,7 @@ def pageConfig() {
        	 	paragraph "<b>Fast Color Changing:</b>"
         	paragraph "Designed for color changing bulbs. This section can control lights individually, or all together within the same child app. Used to change colors between 5 sec and 5 minutes."
 			paragraph "<b>Slow Color Changing:</b>"
-        	paragraph "Designed for color changing bulbs. This section can control lights individually, or all together within the same child app. Used to change colors between 5 minutes and 3 hours."
+			paragraph "Designed for color changing bulbs. This section can control lights individually, or all together within the same child app. Used to change colors between 1 minute and 3 hours."
 			paragraph "<b>Slow Off, On and Loop:</b>"
         	paragraph "Designed to slowly raise or lower any dimmable device. Great for morning or night routines. Also has the ability to setup a loop to continually raise and lower a dimmable device. Note: The dimming is not smooth but rather done in steps."
             paragraph "<b>Important:</b>"
@@ -150,9 +151,9 @@ def pageConfig() {
 		}
         
 		if(triggerMode == "Slow_Color_Changing"){
-			section(getFormat("header-green", "${getImage("Blank")}"+" Used to change colors between 5 minutes and 3 hours")) {
+			section(getFormat("header-green", "${getImage("Blank")}"+" Used to change colors between 1 minute and 3 hours")) {
         		input "lights", "capability.colorControl", title: "Select Color Changing Bulbs", required: false, multiple:true
-            	input "sleepytime2", "number", title: "Enter the delay between actions in minutes (range 5 to 180)" , required: true, defaultValue: 60, range: '5..180'
+				input "sleepytime2", "number", title: "Enter the delay between actions in minutes (range 1 to 180)" , required: true, defaultValue: 60, range: '1..180'
         		input "seperate", "enum", title: "Cycle each light individually or all together", defaultValue: "individual", options: ["individual","combined"], required: true, multiple: false
                 input "pattern", "enum", title: "Cycle or Randomize each color", defaultValue: "randomize", options: ["randomize","cycle"], required: true, multiple: false
 				input "colorSelection", "enum", title: "Choose your colors", options: [
@@ -293,7 +294,7 @@ def changeHandler(evt) {            // Modified code from ST - Kristopher Kubick
 }
 
 def slowChangeHandler(evt) {        // Modified code from ST - Kristopher Kubicki
-    def delay = Math.max(5, (sleepytime2 ?: 60).toInteger()) * 60
+    def delay = Math.max(1, (sleepytime2 ?: 60).toInteger()) * 60
     runColorCycle("slowChangeHandler", delay)
 }
 

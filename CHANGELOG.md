@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## v0.5.2 — 2026-10-03
+- Lowered the Lighting Effects slow color change delay minimum from 5 minutes to 1 minute; the allowed range is now 1–180 minutes. The default remains 60 minutes.
+
 ## v0.5.1 — 2026-10-03
 - Fixed Lighting Effects Child fast and slow color modes to send one color command to each selected bulb per cycle, including Matter bulbs whose switch state has not yet updated.
 - Removed repeated ON commands and the extra per-bulb outer loop that multiplied color commands. Kept the existing combined/individual and cycle/randomize settings.

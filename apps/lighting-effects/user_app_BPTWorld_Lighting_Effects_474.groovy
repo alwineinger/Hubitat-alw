@@ -92,7 +92,7 @@ def mainPage() {
                 paragraph "<b>Fast Color Changing:</b>"
                 paragraph "Designed for color changing bulbs. This section can control lights individually, or all together within the same child app. Used to change colors between 5 sec and 5 minutes."
                 paragraph "<b>Slow Color Changing:</b>"
-                paragraph "Designed for color changing bulbs. This section can control lights individually, or all together within the same child app. Used to change colors between 5 minutes and 3 hours."
+                paragraph "Designed for color changing bulbs. This section can control lights individually, or all together within the same child app. Used to change colors between 1 minute and 3 hours."
                 paragraph "<b>Slow Off, On and Loop:</b>"
                 paragraph "Designed to slowly raise or lower any dimmable device. Great for morning or night routines. Also has the ability to setup a loop to continually raise and lower a dimmable device. Note: The dimming is not smooth but rather done in steps."
                 paragraph "<b>Important:</b>"
