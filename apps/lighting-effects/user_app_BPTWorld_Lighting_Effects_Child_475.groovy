@@ -39,6 +39,7 @@
  *
  * Changes:
  *
+ *  2.0.6 - 10/03/26 - Send one color command per selected bulb per cycle
  *  2.0.5 - 11/08/20 - Adjustments
  *  2.0.4 - 08/28/20 - Added App Control options
  *  2.0.3 - 08/16/20 - Added Light Level to Fast_Color_Changing & Slow_Color_Changing, other changes
@@ -56,7 +57,7 @@ import java.text.SimpleDateFormat
 
 def setVersion(){
     state.name = "Lighting Effects"
-	state.version = "2.0.5"
+	state.version = "2.0.6"
 }
 
 definition(
@@ -66,10 +67,10 @@ definition(
     description: "Create a spooky, sparkly or party effect.",
     category: "",
 	parent: "BPTWorld:Lighting Effects",
-    iconUrl: "",
-    iconX2Url: "",
+    iconUrl: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator.png",
+    iconX2Url: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator@2x.png",
     iconX3Url: "",
-	importUrl: "https://raw.githubusercontent.com/bptworld/Hubitat/master/Apps/Lighting%20Effects/LE%20Child.groovy",
+	importUrl: "https://raw.githubusercontent.com/alwineinger/Hubitat-alw/main/apps/lighting-effects/user_app_BPTWorld_Lighting_Effects_Child_475.groovy",
 )
 
 preferences {
@@ -286,137 +287,56 @@ def fastDimmerHandler(evt) {
 }
     
 def changeHandler(evt) {            // Modified code from ST - Kristopher Kubicki
-    checkEnableHandler()
-    if(pauseApp || state.eSwitch) {
-        log.info "${app.label} is Paused or Disabled"
-    } else {
-        if(logEnable) log.debug "In changeHandler (${state.version})"				
-        if(switches.currentValue("switch") == "on") {
-            if(logEnable) log.debug "In changeHandler - Color Selection = ${colorSelection}"
-            lights.on()
-            if(logEnable) log.debug " - - - - - - - - - - In changeHandler - triggerMode = ${triggerMode}"
-            if(triggerMode == "Fast_Color_Changing"){
-                for (numberoflights in lights) {
-                    if(logEnable) log.debug " - - - - - - - - - - sleepPattern = ${sleepPattern}"
-                    if(sleepPattern == "random"){
-                        slTime = Math.abs(new Random().nextInt() % sleepytime2)
-                        if(logEnable) log.debug " - - - - - - - - - - In random - slTime: ${slTime}"
-                    } else{
-                        slTime = sleepytime2
-                        if(logEnable) log.debug " - - - - - - - - - - In constant - slTime: ${slTime}"
-                    }
-                    def colors = []
-                    colors = colorSelection
-                    if(logEnable) log.debug "In changeHandler - Colors: ${colors}"
-
-                    def offLights = lights.findAll { light -> light.currentSwitch == "off" }
-                    if(logEnable) log.debug "In changeHandler - offLights: ${offLights}"
-
-                    def onLights = lights.findAll { light -> light.currentSwitch == "on" }
-                    if(logEnable) log.debug "In changeHandler - onLights: ${onLights}"
-                    def numberon = onLights.size()
-                    def numcolors = colors.size()
-
-                    if(logEnable) log.debug "In changeHandler - pattern = ${pattern}"
-                    if (pattern == 'randomize') {
-                        randOffset = Math.abs(new Random().nextInt()%numcolors)
-                        if(logEnable) log.debug "In changeHandler - Pattern: ${pattern} - Offset: ${randOffset}"
-                        if (seperate == 'combined') {
-                            sendcolor(onLights,colors[randOffset])
-                        } else {
-                            for(def i=0;i<numberon;i++) {
-                                sendcolor(onLights[i],colors[(randOffset + i) % numcolors])
-                            }
-                        }
-                    } else if (pattern == 'cycle') {
-                        if (onLights.size() > 0) {
-                            if (state.colorOffset >= numcolors) {
-                                state.colorOffset = 0
-                            }
-                            if (seperate == 'combined') {
-                                sendcolor(onLights,colors[state.colorOffset])
-                                if(logEnable) log.debug "In changeHandler - cycle-combined - onLighgts: ${onLights}, Colors: ${colors[state.colorOffset]}"
-                            } else {
-                                for(def i=0;i<numberon;i++) {
-                                    sendcolor(onLights[i],colors[(state.colorOffset + i) % numcolors])
-                                    if(logEnable) log.debug "In changeHandler - cycle-randomize - onLighgts: ${onLights[i]}, Colors: ${colors[(state.colorOffset + i) % numcolors]}"
-                                }
-                            }
-                            state.colorOffset = state.colorOffset + 1
-                        }
-                    }
-                }
-            }
-            if(logEnable) log.debug "In changeHandler - slTime: ${slTime}"
-            runIn(slTime, changeHandler)
-        } else if(switches.currentValue("switch") == "off") {
-            lights.off()
-            unschedule()
-        }
-    }
+    def configuredDelay = Math.max(5, (sleepytime2 ?: 300).toInteger())
+    def delay = sleepPattern == "random" ? 5 + new Random().nextInt(configuredDelay - 4) : configuredDelay
+    runColorCycle("changeHandler", delay)
 }
 
 def slowChangeHandler(evt) {        // Modified code from ST - Kristopher Kubicki
+    def delay = Math.max(5, (sleepytime2 ?: 60).toInteger()) * 60
+    runColorCycle("slowChangeHandler", delay)
+}
+
+def runColorCycle(String handlerName, Integer delaySeconds) {
     checkEnableHandler()
-    if(pauseApp || state.eSwitch) {
+    unschedule(handlerName)
+    if (pauseApp || state.eSwitch) {
         log.info "${app.label} is Paused or Disabled"
-    } else {
-        if(logEnable) log.debug "In slowChangeHandler (${state.version})"				
-        if(switches.currentValue("switch") == "on") {
-            if(logEnable) log.debug "In slowChangeHandler - Color Selection: ${colorSelection}"
-            lights.on()
-            if(triggerMode == "Slow_Color_Changing"){
-                for (numberoflights in lights) {
-                    slpTime = (sleepytime2*60)
-                    def colors = []
-                    colors = colorSelection
-                    if(logEnable) log.debug "In slowChangeHandler - Colors: ${colors}"
+        return
+    }
 
-                    def offLights = lights.findAll { light -> light.currentSwitch == "off"}
-                    if(logEnable) log.debug "In slowChangeHandler - offLights: ${offLights}"
+    if (switches?.currentValue("switch") != "on") {
+        lights?.each { light ->
+            if (light.currentValue("switch") == "on") light.off()
+        }
+        return
+    }
 
-                    def onLights = lights.findAll { light -> light.currentSwitch == "on"}
-                    if(logEnable) log.debug "In slowChangeHandler - onLights: ${onLights}"
-                    def numberon = onLights.size()
-                    def numcolors = colors.size()
+    def selectedLights = lights ?: []
+    def colors = colorSelection ?: []
+    if (!selectedLights || !colors) {
+        log.warn "${app.label}: Select at least one color bulb and one color."
+        return
+    }
 
-                    if(logEnable) log.debug "In slowChangeHandler - pattern: ${pattern}"
-                    if (pattern == 'randomize') {
-                        randOffset = Math.abs(new Random().nextInt()%numcolors)
-                        if(logEnable) log.debug "In slowChangeHandler - Pattern: ${pattern} - Offset: ${randOffset}"
-                        if (seperate == 'combined') {
-                            sendcolor(onLights,colors[randOffset])
-                        } else {
-                            for(def i=0;i<numberon;i++) {
-                                sendcolor(onLights[i],colors[(randOffset + i) % numcolors])
-                            }
-                        }
-                    } else if (pattern == 'cycle') {
-                        if (onLights.size() > 0) {
-                            if (state.colorOffset >= numcolors ) {
-                                state.colorOffset = 0
-                            }
-                            if (seperate == 'combined') {
-                                sendcolor(onLights,colors[state.colorOffset])
-                                if(logEnable) log.debug "In slowChangeHandler - cycle-combined - onLighgts: ${onLights}, Colors: ${colors[state.colorOffset]}"
-                            } else {
-                                for(def i=0;i<numberon;i++) {
-                                    sendcolor(onLights[i],colors[(state.colorOffset + i) % numcolors])
-                                    if(logEnable) log.debug "In slowChangeHandler - cycle-randomize - onLighgts: ${onLights[i]}, Colors: ${colors[(state.colorOffset + i) % numcolors]}"
-                                }
-                            }
-                            state.colorOffset = state.colorOffset + 1
-                        }
-                    }
-                }
-            }
-            if(logEnable) log.debug "In slowChangeHandler - slpTime: ${slpTime}"
-            runIn(slpTime, slowChangeHandler)
-        } else if(switches.currentValue("switch") == "off"){
-            lights.off()
-            unschedule()
+    // Do not filter on currentSwitch after sending commands: Matter state can update later.
+    // Each selected bulb receives exactly one color command in this cycle.
+    def colorOffset = pattern == "cycle"
+        ? ((state.colorOffset ?: 0).toInteger() % colors.size())
+        : new Random().nextInt(colors.size())
+    def sentCount = 0
+    selectedLights.eachWithIndex { light, index ->
+        def selectedColor = colors[(colorOffset + (seperate == "combined" ? 0 : index)) % colors.size()]
+        try {
+            sendcolor(light, selectedColor)
+            sentCount++
+        } catch (Exception e) {
+            log.warn "${app.label}: Could not set color for ${light.displayName}: ${e.message}"
         }
     }
+    if (pattern == "cycle") state.colorOffset = (colorOffset + 1) % colors.size()
+    if (logEnable) log.debug "${handlerName}: sent ${sentCount}/${selectedLights.size()} color commands; next cycle in ${delaySeconds}s"
+    runIn(delaySeconds, handlerName)
 }
 
 def slowonHandler(evt) {                // Modified code from @Bravenel
@@ -520,11 +440,10 @@ def dimStepDown() {                            // Modified code from @Bravenel
     }
 }
 
-def sendcolor(lights,color) {
+def sendcolor(light,color) {
     if(logEnable) log.debug "In sendcolor (${state.version})"
     def hueColor = 0
     def saturation = 100
-    if(lightLevel) onLevel = lightLevel
     switch(color) {
             case "White":
             hueColor = 52
@@ -564,9 +483,9 @@ def sendcolor(lights,color) {
             hueColor = 100
             break;
     }
-	def value = [switch: "on", hue: hueColor, saturation: saturation, level: onLevel as Integer ?: 100]			
-	lights*.setColor(value)
-    if(logEnable) log.debug "In sendcolor - Setting lights: ${lights} - value: ${value}"		
+	def value = [switch: "on", hue: hueColor, saturation: saturation, level: (lightLevel ?: 100).toInteger()]
+	light.setColor(value)
+    if(logEnable) log.debug "In sendcolor - Setting light: ${light} - value: ${value}"
 }
 
 // ********** Normal Stuff **********

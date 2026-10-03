@@ -13,6 +13,11 @@ This repository contains Hubitat Elevation Apps and Drivers, organized by packag
 
 ## Package-to-file map
 
+### Lighting Effects
+- Parent app: `apps/lighting-effects/user_app_BPTWorld_Lighting_Effects_474.groovy`
+- Child app: `apps/lighting-effects/user_app_BPTWorld_Lighting_Effects_Child_475.groovy`
+- After updating the existing child code in Hubitat Apps Code, test one child with four selected bulbs in both `combined` and `individual` color modes. Each bulb should receive one color command per cycle. Toggle the activating switch off and confirm only bulbs still on receive an OFF command.
+
 ### Dehumidify With Bath Fans
 - App: `apps/dehumidify-with-bath-fans/DehumidifyWithBathFansParent.groovy`
 - App: `apps/dehumidify-with-bath-fans/DehumidifyWithBathFansRoomChild.groovy`

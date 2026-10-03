@@ -53,8 +53,8 @@ definition(
     author: "Bryan Turcotte",
     description: "Parent App for 'Lighting Effects' childapps ",
     category: "Convenience",
-    iconUrl: "",
-    iconX2Url: "",
+    iconUrl: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator.png",
+    iconX2Url: "https://raw.githubusercontent.com/HubitatCommunity/HubitatPublic/master/resources/icons/app-Coordinator@2x.png",
     iconX3Url: ""
 )
 

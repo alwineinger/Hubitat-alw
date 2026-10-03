@@ -73,6 +73,9 @@ Examples:
   - Convert numbers explicitly (`toBigDecimal()`, `toInteger()`) and handle exceptions.
 - Idempotent device control:
   - Only call `device.on()` if switch is currently off; only call `off()` if on.
+- Multi-bulb color effects:
+  - For each effect cycle, iterate the configured color bulbs exactly once and send at most one `setColor()` command per bulb. Do not wrap the full color pass in an additional loop over the same bulbs.
+  - Do not filter selected bulbs using `currentSwitch` immediately after sending an ON or color command; Matter device state can arrive later. Verify both combined and individual modes with four bulbs and count commands per cycle in Hubitat logs.
 - Garage-door/HomeKit state:
   - For `GarageDoorControl` and HomeKit, publish only the standard `door` attribute; do not create parallel or nonstandard garage-door state events.
   - Treat physical sensor feedback as the sole authority for terminal `open`/`closed` states; virtual commands may report only `opening`/`closing` until feedback arrives.
